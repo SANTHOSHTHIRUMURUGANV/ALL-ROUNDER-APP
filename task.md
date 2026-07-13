@@ -1,0 +1,21 @@
+# Checklist: AllCounter Partner App Onboarding & Sorting Logic
+
+- [x] State Model Upgrades (AppContext.tsx)
+  - [x] Expand the `Partner` model with all required attributes (Emergency services, doorstep, working radius, awards, portfolio videos)
+  - [x] Configure `PartnerRegistration` state for 7 Onboarding Steps
+  - [x] Implement recommendation sorting algorithms in customer search directories
+- [x] Portal Implementations
+  - [x] **Partner App (PartnerView.tsx)**
+    - [x] 7-Step Onboarding Form UI (Profession, Personal details, Business details, Upload documents, Portfolio media, Availability setups, Verification status)
+    - [x] Profile Completion % indicator widget
+    - [x] Verified status alerts (VERIFIED PARTNER, PENDING, REJECTED)
+    - [x] Partner Dashboard layout (analytics, wallet withdrawal, incoming order request alarms, Google Maps navigation routes)
+  - [x] **Customer App (CustomerView.tsx)**
+    - [x] Update category lists to render sorting options (Rating, Distance, Experience, Completed Jobs, Response Time)
+    - [x] Profile page modals with call/WhatsApp hooks, portfolio image/video galleries, and map markers
+  - [x] **Admin Dashboard (AdminView.tsx)**
+    - [x] KYC document checkers (Aadhaar, selfie matches)
+    - [x] Action controls to verify, reject, or set pending status
+- [x] Build & Verify
+  - [x] Test TypeScript compilation
+  - [x] Confirm hot-reload server status
