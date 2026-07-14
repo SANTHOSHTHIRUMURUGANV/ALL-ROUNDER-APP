@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp, Partner, CartItem } from '../context/AppContext';
-import { translations } from '../utils/translations';
+import { useTranslation } from 'react-i18next';
 import { 
   Search, Star, MapPin, Tag, ShoppingBag, 
   Trash2, CreditCard, X, Navigation, Compass,
@@ -67,13 +67,13 @@ const OFFERS = [
 
 export const CustomerView: React.FC = () => {
   const {
-    language, cart, addToCart, removeFromCart, updateCartQuantity,
+    cart, addToCart, removeFromCart, updateCartQuantity,
     clearCart, walletBalance, deductWalletMoney, addBooking, bookings,
     activeTrackingId, setActiveTrackingId, partners, searchQuery, setSearchQuery,
     addNotification, updateBookingStatus, locationCoords
   } = useApp();
 
-  const t = translations[language];
+  const { t } = useTranslation();
 
   // UI Flow States
   const [selectedGroup, setSelectedGroup] = useState('All');
@@ -216,7 +216,7 @@ export const CustomerView: React.FC = () => {
   const handleDirectBook = (partner: Partner) => {
     addToCart({
       id: `${partner.id}-booking`,
-      name: `${partner.category} Visit - ${partner.businessName}`,
+      name: `${t(`categories.${partner.category}`)} Visit - ${partner.businessName}`,
       price: partner.price,
       quantity: 1,
       category: partner.category,
@@ -246,13 +246,13 @@ export const CustomerView: React.FC = () => {
 
   const handleOpenChat = (p: Partner) => {
     setActivePartnerChat(p);
-    setChatLogs([{ sender: 'partner', text: `Hello! I am your ${p.category} provider ${p.name}. How can I help you today?` }]);
+    setChatLogs([{ sender: 'partner', text: `Hello! I am your ${t(`categories.${p.category}`)} provider ${p.name}. How can I help you today?` }]);
   };
 
   return (
     <div className="relative min-h-screen bg-[#0F172A] text-slate-100 pb-16">
       
-      {/* 1. Landing Hero (Flipkart Apple Premium Style) */}
+      {/* 1. Landing Hero */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#0F172A] via-[#1E293B]/70 to-[#0F172A] py-16 px-4 text-center border-b border-white/5">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#EC4899_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
         
@@ -261,7 +261,7 @@ export const CustomerView: React.FC = () => {
             🤖 AI-Powered Recommendation Engine Enabled
           </span>
           <h1 className="mt-4 text-4xl sm:text-6xl font-black tracking-tight leading-none text-white">
-            Everything. <span className="bg-gradient-to-r from-pink-500 via-fuchsia-400 to-pink-500 bg-clip-text text-transparent">On-Demand.</span>
+            {t('brand')}. <span className="bg-gradient-to-r from-pink-500 via-fuchsia-400 to-pink-500 bg-clip-text text-transparent">{t('slogan')}</span>
           </h1>
           <p className="mt-4 text-xs sm:text-base text-slate-400 font-semibold uppercase tracking-wider">
             Verified Local Partners Onboarded Live
@@ -275,7 +275,7 @@ export const CustomerView: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search painter, carpenter, plumber, driver..."
+                placeholder={t('searchPlaceholder')}
                 className="w-full bg-transparent px-3 py-2 text-xs text-white outline-none"
               />
               <button 
@@ -371,8 +371,8 @@ export const CustomerView: React.FC = () => {
             <section className="space-y-4">
               <div className="flex justify-between items-end border-b border-white/5 pb-2">
                 <div>
-                  <h2 className="text-lg font-black text-white uppercase tracking-wider">A2Z Categories</h2>
-                  <p className="text-[10px] text-slate-500">Select any category to browse verified local providers</p>
+                  <h2 className="text-lg font-black text-white uppercase tracking-wider">{t('categoriesTitle')}</h2>
+                  <p className="text-[10px] text-slate-550">Select any category to browse verified local providers</p>
                 </div>
                 <div className="flex items-center space-x-1.5 overflow-x-auto whitespace-nowrap scrollbar-none max-w-sm sm:max-w-md lg:max-w-none">
                   {groups.map(g => (
@@ -400,7 +400,7 @@ export const CustomerView: React.FC = () => {
                   >
                     <div className="text-3xl transition-transform duration-300 group-hover:scale-115">{cat.icon}</div>
                     <span className="mt-2.5 text-[10px] font-bold text-slate-300 group-hover:text-pink-400 text-center truncate w-full uppercase tracking-wider">
-                      {cat.name}
+                      {t(`categories.${cat.name}`)}
                     </span>
                   </button>
                 ))}
@@ -409,7 +409,7 @@ export const CustomerView: React.FC = () => {
 
             {/* Popular offers banner */}
             <section className="space-y-4">
-              <h2 className="text-lg font-black text-white uppercase tracking-wider">Promotional Campaigns</h2>
+              <h2 className="text-lg font-black text-white uppercase tracking-wider">{t('popularOffers')}</h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {OFFERS.map(o => (
                   <div key={o.id} className="rounded-3xl p-6 bg-gradient-to-r from-pink-650 to-rose-800 text-white shadow-xl flex flex-col justify-between relative overflow-hidden border border-white/10 group">
@@ -436,7 +436,7 @@ export const CustomerView: React.FC = () => {
             </section>
           </>
         ) : (
-          // Category Specific Listing with recommendation sorting logic
+          // Category Specific Listing
           <section className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
               <div className="flex items-center space-x-3">
@@ -448,7 +448,7 @@ export const CustomerView: React.FC = () => {
                 </button>
                 <div>
                   <span className="text-[10px] font-black uppercase text-pink-400 tracking-wider">Services Directory</span>
-                  <h2 className="text-2xl font-black text-white uppercase">{activeCategoryFilter} Providers</h2>
+                  <h2 className="text-2xl font-black text-white uppercase">{t(`categories.${activeCategoryFilter}`)} Providers</h2>
                 </div>
               </div>
 
@@ -469,21 +469,21 @@ export const CustomerView: React.FC = () => {
                   <SlidersHorizontal className="h-3.5 w-3.5 text-pink-400" />
                   <button 
                     onClick={() => setFilterAvailableOnly(!filterAvailableOnly)}
-                    className={`font-bold uppercase text-[9px] tracking-wider ${filterAvailableOnly ? 'text-pink-400' : 'text-slate-550'}`}
+                    className={`font-bold uppercase text-[9px] tracking-wider ${filterAvailableOnly ? 'text-pink-400' : 'text-slate-555'}`}
                   >
                     Online
                   </button>
                   <span className="text-white/10">|</span>
                   <button 
                     onClick={() => setFilterEmergencyOnly(!filterEmergencyOnly)}
-                    className={`font-bold uppercase text-[9px] tracking-wider ${filterEmergencyOnly ? 'text-pink-400' : 'text-slate-550'}`}
+                    className={`font-bold uppercase text-[9px] tracking-wider ${filterEmergencyOnly ? 'text-pink-400' : 'text-slate-555'}`}
                   >
                     Emergency
                   </button>
                   <span className="text-white/10">|</span>
                   <button 
                     onClick={() => setFilterDoorstepOnly(!filterDoorstepOnly)}
-                    className={`font-bold uppercase text-[9px] tracking-wider ${filterDoorstepOnly ? 'text-pink-400' : 'text-slate-550'}`}
+                    className={`font-bold uppercase text-[9px] tracking-wider ${filterDoorstepOnly ? 'text-pink-400' : 'text-slate-555'}`}
                   >
                     Doorstep
                   </button>
@@ -514,7 +514,7 @@ export const CustomerView: React.FC = () => {
               <div className="text-center py-20 bg-slate-900/50 rounded-3xl border border-white/5">
                 <span className="text-3xl">📭</span>
                 <h3 className="text-sm font-bold text-slate-400 mt-3">No verified partners match criteria</h3>
-                <p className="text-[10px] text-slate-550 mt-1">Try resetting search filters or register a painter in Partner App.</p>
+                <p className="text-[10px] text-slate-555 mt-1">Try resetting search filters or register a painter in Partner App.</p>
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -534,7 +534,7 @@ export const CustomerView: React.FC = () => {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <h4 className="text-sm font-extrabold text-white truncate">{partner.name}</h4>
-                            <span className="text-pink-400 flex items-center shrink-0" title="Aadhaar Verified Professional">
+                            <span className="text-pink-400 flex items-center shrink-0" title={t('verifiedPartner')}>
                               <ShieldCheck className="h-4.5 w-4.5 fill-pink-500/10 text-pink-500" />
                             </span>
                           </div>
@@ -550,12 +550,12 @@ export const CustomerView: React.FC = () => {
 
                       {/* Middle attributes */}
                       <div className="mt-4 grid grid-cols-2 gap-2.5 text-[10px] text-slate-400 border-t border-white/5 pt-4">
-                        <div>💼 Exp: <span className="text-white font-bold">{partner.experience} Yrs</span></div>
-                        <div>🔧 Jobs: <span className="text-white font-bold">{partner.completedJobs} Tasks</span></div>
-                        <div>🗣️ Lang: <span className="text-white font-bold truncate max-w-[80px] inline-block">{partner.languages.join(', ')}</span></div>
+                        <div>💼 {t('experienceLabel')}: <span className="text-white font-bold">{partner.experience} Yrs</span></div>
+                        <div>🔧 {t('completedJobsLabel')}: <span className="text-white font-bold">{partner.completedJobs} Tasks</span></div>
+                        <div>🗣️ {t('languagesLabel')}: <span className="text-white font-bold truncate max-w-[80px] inline-block">{partner.languages.join(', ')}</span></div>
                         <div>📍 GPS Dist: <span className="text-white font-bold">{partner.distance}</span></div>
-                        <div>⚡ Resp Time: <span className="text-pink-400 font-bold">{partner.responseTime} mins</span></div>
-                        <div>🛡️ Doorstep: <span className="text-white font-bold">{partner.doorstepService ? 'Yes' : 'No'}</span></div>
+                        <div>⚡ {t('responseSpeedLabel')}: <span className="text-pink-400 font-bold">{partner.responseTime} mins avg</span></div>
+                        <div>🛡️ {t('doorstep')}: <span className="text-white font-bold">{partner.doorstepService ? 'Yes' : 'No'}</span></div>
                       </div>
 
                       {/* Pricing and Available badge */}
@@ -570,7 +570,7 @@ export const CustomerView: React.FC = () => {
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15' 
                               : 'bg-slate-800 text-slate-450'
                           }`}>
-                            {partner.isOnline ? 'Available' : 'Holiday Mode'}
+                            {partner.isOnline ? t('availableNow') : t('holidayMode')}
                           </span>
                           {partner.emergencyService && (
                             <span className="text-[8px] font-black bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded animate-pulse uppercase tracking-wider">
@@ -594,7 +594,7 @@ export const CustomerView: React.FC = () => {
                         onClick={() => handleDirectBook(partner)}
                         className="flex-1 rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black tracking-wide"
                       >
-                        Book Now
+                        {t('bookNow')}
                       </button>
                     </div>
 
@@ -607,7 +607,7 @@ export const CustomerView: React.FC = () => {
 
       </div>
 
-      {/* 4. Single Partner Detail Profile Modal (Flipkart/Apple Style) */}
+      {/* 4. Single Partner Detail Profile Modal */}
       {selectedPartner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
           <div className="glass-premium max-w-xl w-full rounded-3xl p-6 shadow-2xl relative border border-white/10 max-h-[90vh] overflow-y-auto">
@@ -627,13 +627,13 @@ export const CustomerView: React.FC = () => {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-lg font-black text-white">{selectedPartner.name}</h3>
-                  <span className="text-pink-400" title="Aadhaar KYC Verified Professional">
+                  <span className="text-pink-400" title={t('verifiedPartner')}>
                     <ShieldCheck className="h-5 w-5 fill-pink-500/10 text-pink-500" />
                   </span>
                 </div>
                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">{selectedPartner.businessName}</span>
                 <span className="inline-block mt-2 px-2.5 py-1 rounded bg-slate-800 text-[10px] text-pink-400 font-black uppercase tracking-wider">
-                  {selectedPartner.category}
+                  {t(`categories.${selectedPartner.category}`)}
                 </span>
               </div>
             </div>
@@ -644,39 +644,39 @@ export const CustomerView: React.FC = () => {
               {/* Detailed Specs Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-slate-950/60 p-4 rounded-2xl border border-white/5">
                 <div>
-                  <span className="text-[9px] text-slate-500 font-black uppercase block">Experience</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">{t('experienceLabel')}</span>
                   <span className="font-extrabold text-white">{selectedPartner.experience} Years</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-500 font-black uppercase block">Completed Jobs</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">{t('completedJobsLabel')}</span>
                   <span className="font-extrabold text-white">{selectedPartner.completedJobs} Tasks</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-500 font-black uppercase block">Rating Score</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">{t('ratingScoreLabel')}</span>
                   <span className="font-extrabold text-white flex items-center gap-1">⭐ {selectedPartner.rating}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-500 font-black uppercase block">Working Hours</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">{t('workingHoursLabel')}</span>
                   <span className="font-extrabold text-white">{selectedPartner.workingTime}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-500 font-black uppercase block">languages</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">{t('languagesLabel')}</span>
                   <span className="font-extrabold text-white truncate block">{selectedPartner.languages.join(', ')}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-500 font-black uppercase block">Response Speed</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">{t('responseSpeedLabel')}</span>
                   <span className="font-extrabold text-pink-450">{selectedPartner.responseTime} mins avg</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-500 font-black uppercase block">Emergency SOS</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">Emergency SOS</span>
                   <span className="font-extrabold text-white">{selectedPartner.emergencyService ? 'Yes (24/7)' : 'No'}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-500 font-black uppercase block">Doorstep Delivery</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">{t('doorstep')}</span>
                   <span className="font-extrabold text-white">{selectedPartner.doorstepService ? 'Supported' : 'No'}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-500 font-black uppercase block">service radius</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">{t('serviceRadiusLabel')}</span>
                   <span className="font-extrabold text-white">{selectedPartner.serviceRadius} km</span>
                 </div>
               </div>
@@ -686,7 +686,7 @@ export const CustomerView: React.FC = () => {
                 <div className="p-3 bg-pink-500/5 border border-pink-500/10 rounded-2xl">
                   <h4 className="text-[10px] font-black uppercase text-pink-400 tracking-wider mb-1 flex items-center gap-1">
                     <Sparkles className="h-3.5 w-3.5" />
-                    <span>Awards & Certifications</span>
+                    <span>{t('awardsLabel')}</span>
                   </h4>
                   <ul className="list-disc list-inside text-[11px] text-slate-300 space-y-1">
                     {selectedPartner.awards.map((aw, idx) => (
@@ -717,27 +717,27 @@ export const CustomerView: React.FC = () => {
                 <a 
                   href={`tel:${selectedPartner.phone}`}
                   onClick={() => addNotification('Hook calling...', `Dialer trigger for ${selectedPartner.phone}`, 'info')}
-                  className="flex-1 rounded-xl bg-slate-900 border border-white/5 py-2.5 text-xs font-black uppercase text-slate-350 hover:text-white flex items-center justify-center gap-1.5"
+                  className="flex-1 rounded-xl bg-slate-900 border border-white/5 py-2.5 text-xs font-black uppercase text-slate-355 hover:text-white flex items-center justify-center gap-1.5"
                 >
                   <Phone className="h-4 w-4 text-emerald-400" />
-                  <span>Call Pro</span>
+                  <span>{t('callPro')}</span>
                 </a>
                 <button 
                   onClick={() => {
                     setSelectedPartner(null);
                     handleOpenChat(selectedPartner);
                   }}
-                  className="flex-1 rounded-xl bg-slate-900 border border-white/5 py-2.5 text-xs font-black uppercase text-slate-350 hover:text-white flex items-center justify-center gap-1.5"
+                  className="flex-1 rounded-xl bg-slate-900 border border-white/5 py-2.5 text-xs font-black uppercase text-slate-355 hover:text-white flex items-center justify-center gap-1.5"
                 >
                   <MessageSquare className="h-4 w-4 text-pink-400" />
-                  <span>AI Chat</span>
+                  <span>{t('aiChat')}</span>
                 </button>
                 <button 
                   onClick={() => setShowDirections(!showDirections)}
-                  className="flex-1 rounded-xl bg-slate-900 border border-white/5 py-2.5 text-xs font-black uppercase text-slate-350 hover:text-white flex items-center justify-center gap-1.5"
+                  className="flex-1 rounded-xl bg-slate-900 border border-white/5 py-2.5 text-xs font-black uppercase text-slate-355 hover:text-white flex items-center justify-center gap-1.5"
                 >
                   <Navigation className="h-4 w-4 text-blue-400" />
-                  <span>GPS Map</span>
+                  <span>{t('gpsMap')}</span>
                 </button>
               </div>
 
@@ -761,15 +761,15 @@ export const CustomerView: React.FC = () => {
               <div className="border-t border-white/5 pt-4">
                 <button 
                   onClick={() => setPartnerReviewsOpen(!partnerReviewsOpen)}
-                  className="w-full flex justify-between items-center text-xs font-bold text-slate-350 hover:text-pink-400"
+                  className="w-full flex justify-between items-center text-xs font-bold text-slate-355 hover:text-pink-400"
                 >
-                  <span>Customer reviews ({selectedPartner.reviews.length})</span>
+                  <span>{t('customerReviewsLabel')} ({selectedPartner.reviews.length})</span>
                   <span>{partnerReviewsOpen ? '▼' : '►'}</span>
                 </button>
                 {partnerReviewsOpen && (
                   <div className="mt-3 space-y-3 max-h-40 overflow-y-auto pr-2 divide-y divide-white/5">
                     {selectedPartner.reviews.length === 0 ? (
-                      <p className="text-[10px] text-slate-500 py-2">No reviews yet for this partner</p>
+                      <p className="text-[10px] text-slate-555 py-2">No reviews yet for this partner</p>
                     ) : (
                       selectedPartner.reviews.map((rev, idx) => (
                         <div key={idx} className="pt-2 text-xs">
@@ -777,7 +777,7 @@ export const CustomerView: React.FC = () => {
                             <span className="text-slate-300">{rev.name}</span>
                             <span className="text-amber-400">★ {rev.rating}</span>
                           </div>
-                          <p className="text-[11px] text-slate-400 mt-1 italic">"{rev.comment}"</p>
+                          <p className="text-[11px] text-slate-450 mt-1 italic">"{rev.comment}"</p>
                         </div>
                       ))
                     )}
@@ -792,7 +792,7 @@ export const CustomerView: React.FC = () => {
                 onClick={() => handleDirectBook(selectedPartner)}
                 className="w-full rounded-xl btn-pink-gradient py-3 text-xs uppercase font-black tracking-widest"
               >
-                Book Diagnostic Service (₹{selectedPartner.price})
+                {t('bookNow')} (₹{selectedPartner.price})
               </button>
             </div>
           </div>
@@ -806,23 +806,23 @@ export const CustomerView: React.FC = () => {
             <div>
               <button 
                 onClick={() => setIsCartOpen(false)}
-                className="absolute right-4 top-4 p-1.5 rounded-lg hover:bg-slate-800 text-slate-500"
+                className="absolute right-4 top-4 p-1.5 rounded-lg hover:bg-slate-800 text-slate-555"
               >
                 <X className="h-5 w-5" />
               </button>
               <h3 className="text-sm font-black uppercase text-pink-400 tracking-wider flex items-center gap-2 mb-6">
                 <ShoppingBag className="h-5 w-5" />
-                <span>Your Order Checklist</span>
+                <span>{t('cart')}</span>
               </h3>
 
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 divide-y divide-white/5">
                 {cart.length === 0 ? (
-                  <div className="text-center py-16 text-slate-550 text-xs">Cart is empty</div>
+                  <div className="text-center py-16 text-slate-555 text-xs">Cart is empty</div>
                 ) : (
                   cart.map(item => (
                     <div key={item.id} className="py-3 flex justify-between items-center gap-3">
                       <div>
-                        <span className="text-[9px] font-black uppercase tracking-wider text-pink-400">{item.category}</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-pink-400">{t(`categories.${item.category}`)}</span>
                         <h4 className="text-xs font-extrabold text-white">{item.name}</h4>
                         <span className="text-xs font-black text-slate-300 mt-1 block">₹{item.price * item.quantity}</span>
                       </div>
@@ -860,11 +860,11 @@ export const CustomerView: React.FC = () => {
                   <span>₹{subtotal}</span>
                 </div>
                 <div className="flex justify-between text-xs text-slate-400 mt-1">
-                  <span>Convenience Delivery</span>
+                  <span>{t('gpsCharges')}</span>
                   <span>₹{deliveryFee}</span>
                 </div>
                 <div className="flex justify-between text-sm font-black mt-2 text-white border-t border-white/5 pt-2">
-                  <span>Total Amount</span>
+                  <span>{t('grandTotal')}</span>
                   <span className="text-pink-400">₹{totalAmount}</span>
                 </div>
                 <button
@@ -872,7 +872,7 @@ export const CustomerView: React.FC = () => {
                   className="mt-4 w-full rounded-xl btn-pink-gradient py-3 text-xs uppercase font-black tracking-widest flex items-center justify-center gap-1.5"
                 >
                   <CreditCard className="h-4 w-4" />
-                  <span>Secure Pay Checkout</span>
+                  <span>{t('secureCheckout')}</span>
                 </button>
               </div>
             )}
@@ -893,34 +893,34 @@ export const CustomerView: React.FC = () => {
 
             <div className="flex items-center gap-2 mb-4">
               <div className="h-7 w-7 rounded-lg bg-pink-500 text-white flex items-center justify-center text-xs font-bold font-mono">P</div>
-              <h3 className="text-xs font-black tracking-widest uppercase text-white">AllRounder Pay Platform</h3>
+              <h3 className="text-xs font-black tracking-widest uppercase text-white">{t('secureCheckout')}</h3>
             </div>
 
             {checkoutStep === 'details' ? (
               <div className="space-y-4">
                 <div className="rounded-2xl bg-slate-950 p-4 border border-white/5">
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">Invoice Summary</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-555 mb-2">{t('invoiceSummary')}</h4>
                   <div className="space-y-1.5 text-xs text-slate-350">
                     <div className="flex justify-between">
-                      <span>Total Items</span>
+                      <span>{t('totalItems')}</span>
                       <span>{cart.length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Service Fee</span>
+                      <span>{t('serviceFee')}</span>
                       <span>₹{subtotal}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-pink-400 font-bold">
-                        <span>Discount Applied</span>
+                        <span>{t('discountApplied')}</span>
                         <span>-₹{discount}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span>GPS Delivery Charges</span>
+                      <span>{t('gpsCharges')}</span>
                       <span>₹{deliveryFee}</span>
                     </div>
                     <div className="flex justify-between text-sm font-black border-t border-white/5 pt-1.5 text-white">
-                      <span>Grand Total</span>
+                      <span>{t('grandTotal')}</span>
                       <span>₹{totalAmount}</span>
                     </div>
                   </div>
@@ -949,15 +949,15 @@ export const CustomerView: React.FC = () => {
             ) : (
               <form onSubmit={handlePaymentSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-450">Select Checkout Gateway</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-455">{t('checkoutGateway')}</label>
                   <label className={`flex justify-between items-center p-3 rounded-2xl border cursor-pointer ${
                     paymentMethod === 'wallet' ? 'border-pink-500 bg-pink-500/5' : 'border-white/5'
                   }`}>
                     <div className="flex items-center gap-2">
                       <input type="radio" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} />
                       <div>
-                        <span className="text-xs font-extrabold text-white">AllRounder Wallet Credits</span>
-                        <span className="block text-[10px] text-slate-500">Balance: ₹{walletBalance.toFixed(0)}</span>
+                        <span className="text-xs font-extrabold text-white">{t('walletCredits')}</span>
+                        <span className="block text-[10px] text-slate-555">Balance: ₹{walletBalance.toFixed(0)}</span>
                       </div>
                     </div>
                   </label>
@@ -967,7 +967,7 @@ export const CustomerView: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <input type="radio" checked={paymentMethod === 'upi'} onChange={() => setPaymentMethod('upi')} />
                       <div>
-                        <span className="text-xs font-extrabold text-white">UPI (Google Pay / PhonePe)</span>
+                        <span className="text-xs font-extrabold text-white">{t('upi')}</span>
                       </div>
                     </div>
                   </label>
@@ -977,13 +977,13 @@ export const CustomerView: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <input type="radio" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} />
                       <div>
-                        <span className="text-xs font-extrabold text-white">Credit Card (Stripe Checkout)</span>
+                        <span className="text-xs font-extrabold text-white">{t('card')}</span>
                       </div>
                     </div>
                   </label>
                 </div>
                 <div className="border-t border-white/5 pt-4 flex gap-2">
-                  <button type="button" onClick={() => setCheckoutStep('details')} className="flex-1 rounded-xl bg-slate-800 text-slate-350 py-2.5 text-xs font-bold hover:bg-slate-700">Back</button>
+                  <button type="button" onClick={() => setCheckoutStep('details')} className="flex-1 rounded-xl bg-slate-800 text-slate-355 py-2.5 text-xs font-bold hover:bg-slate-700">Back</button>
                   <button type="submit" className="flex-1 rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black tracking-widest">Pay ₹{totalAmount.toFixed(0)}</button>
                 </div>
               </form>
@@ -1001,7 +1001,7 @@ export const CustomerView: React.FC = () => {
               <img src={activePartnerChat.avatar} className="h-9 w-9 rounded-full object-cover border border-white/5" />
               <div>
                 <h3 className="text-xs font-extrabold text-white">{activePartnerChat.name}</h3>
-                <span className="text-[9px] text-pink-400 font-bold uppercase tracking-wider">Live Chat • {activePartnerChat.category} Pro</span>
+                <span className="text-[9px] text-pink-400 font-bold uppercase tracking-wider">Live Chat • {t(`categories.${activePartnerChat.category}`)} Pro</span>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto space-y-2 p-1 max-h-56">

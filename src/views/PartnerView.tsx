@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp, Partner, Booking } from '../context/AppContext';
-import { translations } from '../utils/translations';
+import { useTranslation } from 'react-i18next';
 import { 
   ShieldCheck, Upload, AlertCircle, FileText, Landmark, Camera,
   User, Check, X, Wallet, ArrowRight, BarChart2, Star,
@@ -19,17 +19,14 @@ const ALL_PROFESSIONS = [
   'Architect', 'Mason', 'Welder', 'CCTV Technician', 'RO Water Service', 'Pest Control'
 ];
 
-const MOCK_LANGUAGES = ['Tamil', 'English', 'Hindi', 'Telugu', 'Malayalam'];
-const MOCK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
 export const PartnerView: React.FC = () => {
   const { 
-    language, bookings, updateBookingStatus, partners, setPartners,
+    bookings, updateBookingStatus, partners, setPartners,
     addNotification, partnerReg, setPartnerReg, submitPartnerRegistration,
     location
   } = useApp();
 
-  const t = translations[language];
+  const { t } = useTranslation();
 
   // We default to viewing Suresh Ramachandran (p-1)
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('p-1');
@@ -201,9 +198,9 @@ export const PartnerView: React.FC = () => {
                   <button
                     key={prof}
                     onClick={() => handleProfessionSelect(prof)}
-                    className="p-3 text-xs font-bold rounded-2xl bg-slate-900 border border-white/5 text-slate-350 hover:border-pink-500 hover:text-pink-400 text-left transition-all"
+                    className="p-3 text-xs font-bold rounded-2xl bg-slate-900 border border-white/5 text-slate-350 hover:border-pink-500 hover:text-pink-400 text-left transition-all animate-in fade-in"
                   >
-                    💼 {prof}
+                    💼 {t(`categories.${prof}`, prof)}
                   </button>
                 ))}
               </div>
@@ -413,7 +410,7 @@ export const PartnerView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Selfie match scanner */}
+              {/* Selfie scanner */}
               <div className="p-4 bg-slate-950 rounded-2xl border border-white/5 space-y-3">
                 <h4 className="text-[10px] font-black uppercase text-pink-400 tracking-wider">Live Face Verification</h4>
                 
@@ -500,7 +497,7 @@ export const PartnerView: React.FC = () => {
             </div>
           )}
 
-          {/* Step 6: Availability settings */}
+          {/* Step 6: Availability */}
           {currentStep === 6 && (
             <div className="space-y-4">
               <h3 className="text-lg font-black text-white uppercase tracking-wider">Step 6: Availability Setup</h3>
@@ -593,7 +590,7 @@ export const PartnerView: React.FC = () => {
           <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/20 p-3.5 flex items-center justify-between text-xs text-emerald-400 font-bold">
             <span className="flex items-center gap-2">
               <ShieldCheck className="h-4.5 w-4.5 shrink-0 text-emerald-400" />
-              <span>✅ VERIFIED PARTNER • Listing active in Chennai regions</span>
+              <span>✅ {t('verifiedPartner')} • Listing active in Chennai regions</span>
             </span>
             <span className="bg-emerald-500 text-white rounded px-2 py-0.5 text-[9px] uppercase font-black tracking-widest">Active</span>
           </div>
@@ -619,7 +616,7 @@ export const PartnerView: React.FC = () => {
           <div className="rounded-3xl bg-slate-900 border border-white/5 p-6 shadow-md flex flex-col justify-between">
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Earnings</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{t('earnings')}</span>
                 <h3 className="text-2xl font-black text-white mt-1">₹{earningsVal}</h3>
               </div>
               <span className="h-10 w-10 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center">
@@ -635,11 +632,10 @@ export const PartnerView: React.FC = () => {
           </div>
 
           <div className="rounded-3xl bg-slate-900 border border-white/5 p-6 shadow-md">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Completed Jobs</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{t('completedJobsLabel')}</span>
             <h3 className="text-2xl font-black text-white mt-1">{completedTotal} Tasks</h3>
-            <span className="text-[9px] text-emerald-400 font-bold block mt-4 flex items-center gap-0.5">
-              <ArrowUpRight className="h-3.5 w-3.5" />
-              <span>+8% versus last month</span>
+            <span className="text-[9px] text-emerald-400 font-bold block mt-2 animate-pulse">
+              ▲ 14.5% versus last week
             </span>
           </div>
 
@@ -652,7 +648,7 @@ export const PartnerView: React.FC = () => {
           </div>
 
           <div className="rounded-3xl bg-slate-900 border border-white/5 p-6 shadow-md">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Average Rating</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{t('ratingScoreLabel')}</span>
             <h3 className="text-2xl font-black text-white mt-1 flex items-center gap-1">★ {activePartner.rating}</h3>
             <span className="text-[9px] text-slate-450 block mt-4">Based on {activePartner.reviewsCount} jobs</span>
           </div>
@@ -676,7 +672,7 @@ export const PartnerView: React.FC = () => {
                     : 'bg-red-500/10 text-red-400 border border-red-500/20'
                 }`}
               >
-                {activePartner.isOnline ? 'Online / Working' : 'Holiday Mode'}
+                {activePartner.isOnline ? t('online') : t('holidayMode')}
               </button>
             </div>
             <div>
@@ -711,7 +707,7 @@ export const PartnerView: React.FC = () => {
           </div>
         </div>
 
-        {/* 3. Incoming alerts */}
+        {/* 3. Incoming requests */}
         {pendingJobs.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-sm font-black uppercase text-pink-400 tracking-wider flex items-center gap-2 animate-pulse">
@@ -725,7 +721,7 @@ export const PartnerView: React.FC = () => {
                     Alert
                   </div>
                   <div>
-                    <span className="text-[9px] font-bold text-pink-400 block uppercase tracking-wider">{job.category}</span>
+                    <span className="text-[9px] font-bold text-pink-400 block uppercase tracking-wider">{t(`categories.${job.category}`)}</span>
                     <h4 className="text-xs font-black text-white mt-1">{job.title}</h4>
                     <div className="mt-3 space-y-1 text-xs text-slate-400">
                       <p>📍 Address: Velachery Sector 5, Chennai</p>
@@ -735,17 +731,17 @@ export const PartnerView: React.FC = () => {
                   <div className="mt-5 flex gap-2 pt-3 border-t border-white/5">
                     <button
                       onClick={() => handleReject(job.id)}
-                      className="flex-1 rounded-xl border border-white/5 bg-slate-950 py-2.5 text-xs font-bold text-slate-450 hover:text-white flex items-center justify-center gap-1"
+                      className="flex-1 rounded-xl border border-white/5 bg-slate-950 py-2.5 text-xs font-bold text-slate-450 hover:text-white flex items-center justify-center gap-1 transition-all"
                     >
                       <X className="h-4 w-4 text-pink-500 shrink-0" />
-                      <span>Reject</span>
+                      <span>{t('reject')}</span>
                     </button>
                     <button
                       onClick={() => handleAccept(job.id)}
                       className="flex-1 rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black flex items-center justify-center gap-1"
                     >
                       <Check className="h-4 w-4 shrink-0" />
-                      <span>Accept</span>
+                      <span>{t('accept')}</span>
                     </button>
                   </div>
                 </div>
@@ -840,7 +836,7 @@ export const PartnerView: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-2xl animate-pulse">💼</span>
-              <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-wider text-white">AllRounder Partner App</h1>
+              <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-wider text-white">{t('partnerMode')}</h1>
             </div>
             <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">
               {!showRegisterWizard ? 'Merchant Workspace' : 'Onboarding Registry'}
@@ -859,7 +855,7 @@ export const PartnerView: React.FC = () => {
                 >
                   {partners.map(p => (
                     <option key={p.id} value={p.id} className="bg-slate-950">
-                      {p.name} ({p.category} - {p.adminStatus.toUpperCase()})
+                      {p.name} ({t(`categories.${p.category}`, p.category)} - {p.adminStatus.toUpperCase()})
                     </option>
                   ))}
                 </select>
@@ -882,7 +878,7 @@ export const PartnerView: React.FC = () => {
               }}
               className="rounded-xl bg-slate-800 border border-white/5 px-4 py-2.5 text-xs font-black uppercase tracking-wider hover:border-pink-500 hover:text-pink-400 text-white transition-all cursor-pointer"
             >
-              Onboard Partner
+              {t('onboardPartner')}
             </button>
           </div>
         </div>

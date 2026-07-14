@@ -1,21 +1,18 @@
-# Checklist: AllCounter Partner App Onboarding & Sorting Logic
+# Checklist: Multilingual i18next & Precise GPS Geocoding
 
-- [x] State Model Upgrades (AppContext.tsx)
-  - [x] Expand the `Partner` model with all required attributes (Emergency services, doorstep, working radius, awards, portfolio videos)
-  - [x] Configure `PartnerRegistration` state for 7 Onboarding Steps
-  - [x] Implement recommendation sorting algorithms in customer search directories
-- [x] Portal Implementations
-  - [x] **Partner App (PartnerView.tsx)**
-    - [x] 7-Step Onboarding Form UI (Profession, Personal details, Business details, Upload documents, Portfolio media, Availability setups, Verification status)
-    - [x] Profile Completion % indicator widget
-    - [x] Verified status alerts (VERIFIED PARTNER, PENDING, REJECTED)
-    - [x] Partner Dashboard layout (analytics, wallet withdrawal, incoming order request alarms, Google Maps navigation routes)
-  - [x] **Customer App (CustomerView.tsx)**
-    - [x] Update category lists to render sorting options (Rating, Distance, Experience, Completed Jobs, Response Time)
-    - [x] Profile page modals with call/WhatsApp hooks, portfolio image/video galleries, and map markers
-  - [x] **Admin Dashboard (AdminView.tsx)**
-    - [x] KYC document checkers (Aadhaar, selfie matches)
-    - [x] Action controls to verify, reject, or set pending status
-- [x] Build & Verify
-  - [x] Test TypeScript compilation
-  - [x] Confirm hot-reload server status
+- [ ] Setup dependencies & initialization
+  - [ ] Install `i18next` and `react-i18next` npm packages
+  - [ ] Create 12 JSON translation files in `src/locales/`
+  - [ ] Initialize `src/i18n.ts` and import it inside `src/main.tsx`
+- [ ] Implement Geolocation & Reverse Geocoding (AppContext.tsx)
+  - [ ] Request HTML5 Geolocation permission and track lat/lng
+  - [ ] Fetch Nominatim OSM reverse geocoding to resolve street address, city, district, state, PIN, country
+  - [ ] Save location details to Local Storage and support manual changes
+  - [ ] Implement Haversine distance calculations (in KM and meters) and update partner directory details
+- [ ] Translate all components using i18next `t(...)`
+  - [ ] Update Navbar
+  - [ ] Update AIChatbot
+  - [ ] Update CustomerView
+  - [ ] Update PartnerView
+  - [ ] Update AdminView
+- [ ] Verify build and reload local server

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import i18n from '../i18n';
 
 // Define structures
 export interface CartItem {
@@ -48,7 +49,7 @@ export interface Partner {
   phone: string;
   whatsapp: string;
   price: number;
-  experience: string; // E.g. "8" (we store as string but extract as number for sorting)
+  experience: string;
   completedJobs: number;
   languages: string[];
   businessName: string;
@@ -62,7 +63,6 @@ export interface Partner {
   panNumber?: string;
   bankAccount?: string;
   upiId?: string;
-  // Newly Added Premium attributes
   emergencyService: boolean;
   doorstepService: boolean;
   gstNumber?: string;
@@ -130,7 +130,16 @@ export interface Notification {
 }
 
 export type ViewRole = 'customer' | 'partner' | 'admin';
-export type Language = 'en' | 'ta' | 'hi';
+export type Language = 'en' | 'ta' | 'hi' | 'te' | 'kn' | 'ml' | 'ar' | 'fr' | 'de' | 'es' | 'zh' | 'ja';
+
+export interface LocationDetails {
+  address: string;
+  city: string;
+  district: string;
+  state: string;
+  postcode: string;
+  country: string;
+}
 
 interface AppContextType {
   theme: 'light' | 'dark';
@@ -142,6 +151,10 @@ interface AppContextType {
   location: string;
   setLocation: (loc: string) => void;
   locationCoords: { lat: number; lng: number };
+  setLocationCoords: React.Dispatch<React.SetStateAction<{ lat: number; lng: number }>>;
+  locationDetails: LocationDetails | null;
+  requestLiveLocation: () => Promise<void>;
+  updateManualLocation: (lat: number, lng: number, addressDetails?: LocationDetails) => Promise<void>;
   simulateGPS: () => void;
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
@@ -174,7 +187,22 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Initialize mock partners with rich metadata
+// Haversine distance calculator
+export const getDistanceInKm = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+// Initialize mock partners with Chennai coordinates
 const INITIAL_PARTNERS: Partner[] = [
   {
     id: 'p-1',
@@ -184,9 +212,9 @@ const INITIAL_PARTNERS: Partner[] = [
     rating: 4.8,
     reviewsCount: 142,
     isOnline: true,
-    distance: '0.9 km',
-    lat: 30,
-    lng: 40,
+    distance: '200 m away',
+    lat: 12.9800,
+    lng: 80.2200,
     phone: '+91 98765 11111',
     whatsapp: '919876511111',
     price: 350,
@@ -222,9 +250,9 @@ const INITIAL_PARTNERS: Partner[] = [
     rating: 4.9,
     reviewsCount: 88,
     isOnline: true,
-    distance: '1.4 km',
-    lat: 48,
-    lng: 62,
+    distance: '1.2 km away',
+    lat: 12.9900,
+    lng: 80.2100,
     phone: '+91 98765 22222',
     whatsapp: '919876522222',
     price: 199,
@@ -258,9 +286,9 @@ const INITIAL_PARTNERS: Partner[] = [
     rating: 4.7,
     reviewsCount: 65,
     isOnline: true,
-    distance: '2.1 km',
-    lat: 60,
-    lng: 25,
+    distance: '1.8 km away',
+    lat: 12.9700,
+    lng: 80.2300,
     phone: '+91 98765 33333',
     whatsapp: '919876533333',
     price: 499,
@@ -294,9 +322,9 @@ const INITIAL_PARTNERS: Partner[] = [
     rating: 4.5,
     reviewsCount: 15,
     isOnline: false,
-    distance: '3.5 km',
-    lat: 70,
-    lng: 80,
+    distance: '4.0 km away',
+    lat: 12.9500,
+    lng: 80.2000,
     phone: '+91 98765 44444',
     whatsapp: '919876544444',
     price: 199,
@@ -330,12 +358,44 @@ const INITIAL_REGISTRATION: PartnerRegistration = {
   availabilityStatus: 'Available Now'
 };
 
+const DEFAULT_COORDS = { lat: 12.9815, lng: 80.2180 }; // Velachery, Chennai
+const DEFAULT_LOCATION_DETAILS: LocationDetails = {
+  address: "Velachery Main Road",
+  city: "Chennai",
+  district: "Chennai District",
+  state: "Tamil Nadu",
+  postcode: "600042",
+  country: "India"
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark'); 
-  const [language, setLanguage] = useState<Language>('en');
+  
+  // Dynamic sync with i18n
+  const [language, setLanguageState] = useState<Language>(() => {
+    return (localStorage.getItem('i18nextLng') as Language) || 'en';
+  });
+
   const [role, setRole] = useState<ViewRole>('customer');
-  const [location, setLocation] = useState('Velachery, Chennai');
-  const [locationCoords, setLocationCoords] = useState({ lat: 12.9815, lng: 80.2180 });
+
+  // Location details states
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number }>(() => {
+    const cached = localStorage.getItem('allcounter_coords');
+    return cached ? JSON.parse(cached) : DEFAULT_COORDS;
+  });
+
+  const [locationDetails, setLocationDetails] = useState<LocationDetails | null>(() => {
+    const cached = localStorage.getItem('allcounter_location_details');
+    return cached ? JSON.parse(cached) : DEFAULT_LOCATION_DETAILS;
+  });
+
+  const [location, setLocation] = useState<string>(() => {
+    if (locationDetails) {
+      return `${locationDetails.address}, ${locationDetails.city}, ${locationDetails.state} ${locationDetails.postcode}`;
+    }
+    return 'Velachery, Chennai';
+  });
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [walletBalance, setWalletBalance] = useState(2500); 
   const [walletTransactions, setWalletTransactions] = useState<AppContextType['walletTransactions']>([
@@ -358,6 +418,125 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const root = window.document.documentElement;
     root.classList.add('dark');
     document.body.classList.add('dark');
+  }, []);
+
+  // Update i18n language changed callback
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    i18n.changeLanguage(lang);
+  };
+
+  // Recalculate distances whenever coordinates change
+  useEffect(() => {
+    setPartners(prev => {
+      return prev.map(p => {
+        const distKm = getDistanceInKm(locationCoords.lat, locationCoords.lng, p.lat, p.lng);
+        let distStr = '';
+        if (distKm < 1) {
+          distStr = `${Math.round(distKm * 1000)} m away`;
+        } else {
+          distStr = `${distKm.toFixed(1)} km away`;
+        }
+        return { ...p, distance: distStr };
+      });
+    });
+  }, [locationCoords]);
+
+  // Reverse geocoding fetch from OSM Nominatim (or fallback)
+  const fetchAddressFromCoords = async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+        headers: {
+          'Accept-Language': 'en'
+        }
+      });
+      const data = await res.json();
+      if (data && data.address) {
+        const addr = data.address;
+        const details: LocationDetails = {
+          address: addr.road || addr.suburb || addr.neighbourhood || 'Selected Location',
+          city: addr.city || addr.town || addr.village || 'Chennai',
+          district: addr.county || addr.district || 'Chennai District',
+          state: addr.state || 'Tamil Nadu',
+          postcode: addr.postcode || '600042',
+          country: addr.country || 'India'
+        };
+        setLocationDetails(details);
+        setLocation(`${details.address}, ${details.city}, ${details.state} ${details.postcode}`);
+        localStorage.setItem('allcounter_location_details', JSON.stringify(details));
+      } else {
+        throw new Error("No address found");
+      }
+    } catch (e) {
+      console.warn("Nominatim OSM Geocoding fail. Fallback to mock details:", e);
+      // Fallback
+      let details: LocationDetails = DEFAULT_LOCATION_DETAILS;
+      if (Math.abs(lat - 12.9815) > 0.05) {
+        details = {
+          address: "Anna Salai Road",
+          city: "Chennai",
+          district: "Chennai District",
+          state: "Tamil Nadu",
+          postcode: "600002",
+          country: "India"
+        };
+      }
+      setLocationDetails(details);
+      setLocation(`${details.address}, ${details.city}, ${details.state} ${details.postcode}`);
+      localStorage.setItem('allcounter_location_details', JSON.stringify(details));
+    }
+  };
+
+  // Launch live HTML5 geolocation request
+  const requestLiveLocation = async () => {
+    if (!navigator.geolocation) {
+      addNotification('GPS Error 🛰', 'HTML5 Geolocation is not supported by your browser.', 'warning');
+      return;
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const coords = { lat, lng };
+          setLocationCoords(coords);
+          localStorage.setItem('allcounter_coords', JSON.stringify(coords));
+          await fetchAddressFromCoords(lat, lng);
+          addNotification('Location Found 🛰', 'Your precise GPS location is synced.', 'success');
+          resolve();
+        },
+        (error) => {
+          console.warn("GPS Permission Denied / Timedout:", error.message);
+          addNotification('GPS Blocked 🛰', 'Access denied. Please select coordinates manually.', 'warning');
+          reject(error);
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    });
+  };
+
+  // Set manual coordinates selection
+  const updateManualLocation = async (lat: number, lng: number, addressDetails?: LocationDetails) => {
+    const coords = { lat, lng };
+    setLocationCoords(coords);
+    localStorage.setItem('allcounter_coords', JSON.stringify(coords));
+
+    if (addressDetails) {
+      setLocationDetails(addressDetails);
+      setLocation(`${addressDetails.address}, ${addressDetails.city}, ${addressDetails.state} ${addressDetails.postcode}`);
+      localStorage.setItem('allcounter_location_details', JSON.stringify(addressDetails));
+    } else {
+      await fetchAddressFromCoords(lat, lng);
+    }
+  };
+
+  // Trigger HTML5 geolocation on first visit
+  useEffect(() => {
+    const coordsCached = localStorage.getItem('allcounter_coords');
+    if (!coordsCached) {
+      requestLiveLocation().catch(() => {});
+    }
   }, []);
 
   // Dispatch navigation trace
@@ -398,11 +577,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const simulateGPS = () => {
-    const randomOffsetLat = (Math.random() - 0.5) * 0.01;
-    const randomOffsetLng = (Math.random() - 0.5) * 0.01;
-    setLocationCoords({ lat: 12.9815 + randomOffsetLat, lng: 80.2180 + randomOffsetLng });
-    setLocation(`Velachery Gated Community, Chennai`);
-    addNotification('GPS Location Recalculated 🛰', 'Your device coordinates have been updated.', 'info');
+    const randomOffsetLat = (Math.random() - 0.5) * 0.05;
+    const randomOffsetLng = (Math.random() - 0.5) * 0.05;
+    const nextLat = 12.9815 + randomOffsetLat;
+    const nextLng = 80.2180 + randomOffsetLng;
+    updateManualLocation(nextLat, nextLng);
   };
 
   // Cart operations
@@ -538,9 +717,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       rating: 5.0,
       reviewsCount: 0,
       isOnline: partnerReg.availabilityStatus === 'Available Now',
-      distance: '2.5 km',
-      lat: 50 + Math.random() * 20,
-      lng: 50 + Math.random() * 20,
+      distance: '2.5 km away',
+      lat: locationCoords.lat + (Math.random() - 0.5) * 0.05,
+      lng: locationCoords.lng + (Math.random() - 0.5) * 0.05,
       phone: partnerReg.personalDetails.phone || '+91 99999 88888',
       whatsapp: partnerReg.personalDetails.phone?.replace('+', '') || '919999988888',
       price: partnerReg.businessDetails.pricing || 299,
@@ -604,6 +783,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         location,
         setLocation,
         locationCoords,
+        setLocationCoords,
+        locationDetails,
+        requestLiveLocation,
+        updateManualLocation,
         simulateGPS,
         cart,
         addToCart,

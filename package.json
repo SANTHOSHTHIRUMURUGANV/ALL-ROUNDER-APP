@@ -1,5 +1,5 @@
 {
-  "name": "all-counter",
+  "name": "all-Rounder",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,9 +12,11 @@
   "dependencies": {
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.42.2",
+    "i18next": "^26.3.6",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-i18next": "^17.0.9"
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.9.0",

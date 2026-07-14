@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { translations } from '../utils/translations';
+import { useTranslation } from 'react-i18next';
 import { 
   Bot, X, Send, Mic, MicOff, Sparkles, Zap
 } from 'lucide-react';
@@ -20,11 +20,11 @@ export const AIChatbot: React.FC = () => {
     addNotification 
   } = useApp();
   
-  const t = translations[language];
+  const { t } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', sender: 'bot', text: t.chatbotIntro, timestamp: new Date() }
+    { id: '1', sender: 'bot', text: t('chatbotIntro'), timestamp: new Date() }
   ]);
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -302,7 +302,7 @@ export const AIChatbot: React.FC = () => {
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
-              placeholder={isListening ? t.voiceSearch : t.searchPlaceholder}
+              placeholder={isListening ? t('voiceSearch') : t('searchPlaceholder')}
               className="flex-1 bg-slate-950 border border-white/5 rounded-xl px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
             />
             <button
