@@ -28,26 +28,22 @@ export const PartnerView: React.FC = () => {
 
   const { t } = useTranslation();
 
-  // We default to viewing Suresh Ramachandran (p-1)
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('p-1');
   const [showRegisterWizard, setShowRegisterWizard] = useState(false);
 
   const activePartner = partners.find(p => p.id === selectedPartnerId);
-
-  // Registration step status
   const currentStep = partnerReg.step;
 
-  // Withdrawal Modal
+  // Payout states
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('500');
   const [upiId, setUpiId] = useState('suresh@okicici');
 
-  // Self scanner state for Step 4
+  // Self scanner state
   const [selfieScanning, setSelfieScanning] = useState(false);
   const [selfieScanned, setSelfieScanned] = useState(false);
   const [selfieScanProgress, setSelfieScanProgress] = useState(0);
 
-  // Handle Accept
   const handleAccept = (bId: string) => {
     updateBookingStatus(bId, 'accepted');
     addNotification('Task Accepted! 🚕', 'Route is visible to customer. Navigation started.', 'success');
@@ -56,13 +52,11 @@ export const PartnerView: React.FC = () => {
     }, 4500);
   };
 
-  // Handle Reject
   const handleReject = (bId: string) => {
     updateBookingStatus(bId, 'cancelled');
     addNotification('Task Rejected 🔴', 'Passed request to another available pro.', 'warning');
   };
 
-  // Toggle Online
   const handleToggleOnline = (id: string) => {
     setPartners(prev =>
       prev.map(p => (p.id === id ? { ...p, isOnline: !p.isOnline } : p))
@@ -74,7 +68,6 @@ export const PartnerView: React.FC = () => {
     );
   };
 
-  // Topup / Payout Wallet
   const handleWithdrawal = (e: React.FormEvent, balance: number) => {
     e.preventDefault();
     const amt = parseFloat(withdrawAmount);
@@ -87,7 +80,6 @@ export const PartnerView: React.FC = () => {
     }
   };
 
-  // Wizard Helpers
   const updateWizardField = (section: keyof typeof partnerReg, field: string, value: any) => {
     setPartnerReg(prev => {
       const sect = prev[section];
@@ -117,7 +109,6 @@ export const PartnerView: React.FC = () => {
     nextStep();
   };
 
-  // Trigger selfie matching scan
   const triggerSelfieScan = () => {
     setSelfieScanning(true);
     setSelfieScanProgress(0);
@@ -139,7 +130,6 @@ export const PartnerView: React.FC = () => {
   const handleFinalSubmit = () => {
     submitPartnerRegistration();
     setShowRegisterWizard(false);
-    // Auto view newly registered partner
     const newlyCreated = partners[partners.length - 1];
     if (newlyCreated) {
       setSelectedPartnerId(newlyCreated.id);
@@ -147,10 +137,9 @@ export const PartnerView: React.FC = () => {
     confetti();
   };
 
-  // Calculate Profile Completion %
   const calculateProfilePercentage = () => {
     if (!activePartner) return 0;
-    let score = 20; // profession choice
+    let score = 20;
     if (activePartner.avatar) score += 15;
     if (activePartner.phone && activePartner.whatsapp) score += 15;
     if (activePartner.price && activePartner.experience) score += 20;
@@ -159,7 +148,6 @@ export const PartnerView: React.FC = () => {
     return score;
   };
 
-  // Onboarding Wizard steps
   const renderWizard = () => {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
@@ -167,7 +155,7 @@ export const PartnerView: React.FC = () => {
           
           <button 
             onClick={() => setShowRegisterWizard(false)}
-            className="absolute right-4 top-4 p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-pink-500/40 text-slate-400"
+            className="absolute right-4 top-4 p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-cyan-400/40 text-slate-400"
           >
             Cancel
           </button>
@@ -178,12 +166,12 @@ export const PartnerView: React.FC = () => {
               <div key={st} className="flex items-center shrink-0">
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-black border transition-all ${
                   currentStep >= st 
-                    ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white border-pink-500' 
+                    ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white border-cyan-400' 
                     : 'bg-slate-950 border-white/5 text-slate-500'
                 }`}>
                   {st}
                 </div>
-                {st < 7 && <div className={`w-8 h-0.5 mx-1.5 ${currentStep > st ? 'bg-pink-500' : 'bg-slate-800'}`} />}
+                {st < 7 && <div className={`w-8 h-0.5 mx-1.5 ${currentStep > st ? 'bg-cyan-500' : 'bg-slate-800'}`} />}
               </div>
             ))}
           </div>
@@ -198,7 +186,7 @@ export const PartnerView: React.FC = () => {
                   <button
                     key={prof}
                     onClick={() => handleProfessionSelect(prof)}
-                    className="p-3 text-xs font-bold rounded-2xl bg-slate-900 border border-white/5 text-slate-350 hover:border-pink-500 hover:text-pink-400 text-left transition-all animate-in fade-in"
+                    className="p-3 text-xs font-bold rounded-2xl bg-slate-900 border border-white/5 text-slate-350 hover:border-cyan-400 hover:text-cyan-400 text-left transition-all animate-in fade-in"
                   >
                     💼 {t(`categories.${prof}`, prof)}
                   </button>
@@ -219,7 +207,7 @@ export const PartnerView: React.FC = () => {
                     placeholder="Enter legal name"
                     value={partnerReg.personalDetails.name}
                     onChange={e => updateWizardField('personalDetails', 'name', e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -230,7 +218,7 @@ export const PartnerView: React.FC = () => {
                       placeholder="+91 99999 88888"
                       value={partnerReg.personalDetails.phone}
                       onChange={e => updateWizardField('personalDetails', 'phone', e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     />
                   </div>
                   <div>
@@ -240,7 +228,7 @@ export const PartnerView: React.FC = () => {
                       placeholder="provider@allcounter.com"
                       value={partnerReg.personalDetails.email}
                       onChange={e => updateWizardField('personalDetails', 'email', e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     />
                   </div>
                 </div>
@@ -250,7 +238,7 @@ export const PartnerView: React.FC = () => {
                     <select
                       value={partnerReg.personalDetails.gender}
                       onChange={e => updateWizardField('personalDetails', 'gender', e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white cursor-pointer"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white cursor-pointer"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -263,7 +251,7 @@ export const PartnerView: React.FC = () => {
                       type="date"
                       value={partnerReg.personalDetails.dob}
                       onChange={e => updateWizardField('personalDetails', 'dob', e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     />
                   </div>
                 </div>
@@ -274,7 +262,7 @@ export const PartnerView: React.FC = () => {
                     placeholder="https://unsplash.com/photo-... (Portrait URL)"
                     value={partnerReg.personalDetails.photo}
                     onChange={e => updateWizardField('personalDetails', 'photo', e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                 </div>
                 <div>
@@ -284,13 +272,13 @@ export const PartnerView: React.FC = () => {
                     placeholder="Residential address"
                     value={partnerReg.personalDetails.address}
                     onChange={e => updateWizardField('personalDetails', 'address', e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                 </div>
               </div>
               <div className="flex justify-between items-center pt-4">
                 <button onClick={prevStep} className="px-4 py-2 text-xs font-bold bg-slate-800 text-slate-350 rounded-xl">Back</button>
-                <button onClick={nextStep} className="px-5 py-2 text-xs btn-pink-gradient rounded-xl">Continue</button>
+                <button onClick={nextStep} className="px-5 py-2 text-xs btn-cyan-gradient rounded-xl">Continue</button>
               </div>
             </div>
           )}
@@ -308,7 +296,7 @@ export const PartnerView: React.FC = () => {
                       placeholder="E.g. Rohan Masonry Studio"
                       value={partnerReg.businessDetails.businessName}
                       onChange={e => updateWizardField('businessDetails', 'businessName', e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     />
                   </div>
                   <div>
@@ -318,7 +306,7 @@ export const PartnerView: React.FC = () => {
                       placeholder="E.g. Rohan & Sons Masons"
                       value={partnerReg.businessDetails.shopName}
                       onChange={e => updateWizardField('businessDetails', 'shopName', e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     />
                   </div>
                 </div>
@@ -330,7 +318,7 @@ export const PartnerView: React.FC = () => {
                       placeholder="E.g. 6"
                       value={partnerReg.businessDetails.experience}
                       onChange={e => updateWizardField('businessDetails', 'experience', e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     />
                   </div>
                   <div>
@@ -340,7 +328,7 @@ export const PartnerView: React.FC = () => {
                       placeholder="E.g. 199"
                       value={partnerReg.businessDetails.pricing}
                       onChange={e => updateWizardField('businessDetails', 'pricing', parseFloat(e.target.value))}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     />
                   </div>
                   <div>
@@ -350,7 +338,7 @@ export const PartnerView: React.FC = () => {
                       placeholder="E.g. 10"
                       value={partnerReg.businessDetails.serviceRadius}
                       onChange={e => updateWizardField('businessDetails', 'serviceRadius', parseInt(e.target.value))}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     />
                   </div>
                 </div>
@@ -378,13 +366,13 @@ export const PartnerView: React.FC = () => {
                     placeholder="Describe your trade expertise"
                     value={partnerReg.businessDetails.description}
                     onChange={e => updateWizardField('businessDetails', 'description', e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white h-20 resize-none"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white h-20 resize-none"
                   />
                 </div>
               </div>
               <div className="flex justify-between items-center pt-4">
-                <button onClick={prevStep} className="px-4 py-2 text-xs font-bold bg-slate-800 text-slate-350 rounded-xl">Back</button>
-                <button onClick={nextStep} className="px-5 py-2 text-xs btn-pink-gradient rounded-xl">Continue</button>
+                <button onClick={prevStep} className="px-4 py-2 text-xs font-bold bg-slate-800 text-slate-355 rounded-xl">Back</button>
+                <button onClick={nextStep} className="px-5 py-2 text-xs btn-cyan-gradient rounded-xl">Continue</button>
               </div>
             </div>
           )}
@@ -395,16 +383,16 @@ export const PartnerView: React.FC = () => {
               <h3 className="text-lg font-black text-white uppercase tracking-wider">Step 4: Verification Documents</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="border border-dashed border-white/10 rounded-2xl p-4 bg-slate-950 text-center">
-                  <FileText className="h-6 w-6 text-pink-400 mx-auto" />
+                  <FileText className="h-6 w-6 text-cyan-400 mx-auto" />
                   <span className="text-[9px] font-bold text-slate-400 block mt-1 uppercase">Aadhaar Card PDF</span>
-                  <button type="button" onClick={() => updateWizardField('uploads', 'aadhaarFile', 'AadhaarVerified.pdf')} className={`mt-2 text-[9px] px-2 py-1 rounded ${partnerReg.uploads.aadhaarFile ? 'bg-emerald-500 text-white' : 'btn-pink-gradient'}`}>
+                  <button type="button" onClick={() => updateWizardField('uploads', 'aadhaarFile', 'AadhaarVerified.pdf')} className={`mt-2 text-[9px] px-2 py-1 rounded ${partnerReg.uploads.aadhaarFile ? 'bg-emerald-500 text-white' : 'btn-cyan-gradient'}`}>
                     {partnerReg.uploads.aadhaarFile ? 'Uploaded' : 'Upload File'}
                   </button>
                 </div>
                 <div className="border border-dashed border-white/10 rounded-2xl p-4 bg-slate-950 text-center">
-                  <FileText className="h-6 w-6 text-pink-400 mx-auto" />
+                  <FileText className="h-6 w-6 text-cyan-400 mx-auto" />
                   <span className="text-[9px] font-bold text-slate-400 block mt-1 uppercase">PAN Card PDF</span>
-                  <button type="button" onClick={() => updateWizardField('uploads', 'panFile', 'PanVerified.pdf')} className={`mt-2 text-[9px] px-2 py-1 rounded ${partnerReg.uploads.panFile ? 'bg-emerald-500 text-white' : 'btn-pink-gradient'}`}>
+                  <button type="button" onClick={() => updateWizardField('uploads', 'panFile', 'PanVerified.pdf')} className={`mt-2 text-[9px] px-2 py-1 rounded ${partnerReg.uploads.panFile ? 'bg-emerald-500 text-white' : 'btn-cyan-gradient'}`}>
                     {partnerReg.uploads.panFile ? 'Uploaded' : 'Upload File'}
                   </button>
                 </div>
@@ -412,11 +400,11 @@ export const PartnerView: React.FC = () => {
 
               {/* Selfie scanner */}
               <div className="p-4 bg-slate-950 rounded-2xl border border-white/5 space-y-3">
-                <h4 className="text-[10px] font-black uppercase text-pink-400 tracking-wider">Live Face Verification</h4>
+                <h4 className="text-[10px] font-black uppercase text-cyan-400 tracking-wider">Live Face Verification</h4>
                 
                 {selfieScanning ? (
                   <div className="text-center py-4 space-y-2">
-                    <div className="h-12 w-12 rounded-full border-4 border-t-pink-500 border-white/10 animate-spin mx-auto" />
+                    <div className="h-12 w-12 rounded-full border-4 border-t-cyan-500 border-white/10 animate-spin mx-auto" />
                     <span className="text-xs text-slate-400 block">Biometric scanning: {selfieScanProgress}%</span>
                   </div>
                 ) : selfieScanned ? (
@@ -428,7 +416,7 @@ export const PartnerView: React.FC = () => {
                   <button 
                     type="button" 
                     onClick={triggerSelfieScan}
-                    className="w-full py-2.5 rounded-xl border border-pink-500/20 bg-pink-500/5 text-pink-400 text-xs font-bold hover:bg-pink-500 hover:text-white flex items-center justify-center gap-1.5 transition-all"
+                    className="w-full py-2.5 rounded-xl border border-cyan-500/20 bg-cyan-500/5 text-cyan-455 text-xs font-bold hover:bg-cyan-500 hover:text-white flex items-center justify-center gap-1.5 transition-all"
                   >
                     <Camera className="h-4 w-4" />
                     <span>Start Biometric Selfie Recognition</span>
@@ -444,7 +432,7 @@ export const PartnerView: React.FC = () => {
                     placeholder="Account number"
                     value={partnerReg.uploads.bankAccount}
                     onChange={e => updateWizardField('uploads', 'bankAccount', e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                 </div>
                 <div>
@@ -454,14 +442,14 @@ export const PartnerView: React.FC = () => {
                     placeholder="name@upi"
                     value={partnerReg.uploads.upi}
                     onChange={e => updateWizardField('uploads', 'upi', e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                 </div>
               </div>
 
               <div className="flex justify-between items-center pt-4">
                 <button onClick={prevStep} className="px-4 py-2 text-xs font-bold bg-slate-800 text-slate-350 rounded-xl">Back</button>
-                <button onClick={nextStep} className="px-5 py-2 text-xs btn-pink-gradient rounded-xl">Continue</button>
+                <button onClick={nextStep} className="px-5 py-2 text-xs btn-cyan-gradient rounded-xl">Continue</button>
               </div>
             </div>
           )}
@@ -477,7 +465,7 @@ export const PartnerView: React.FC = () => {
                     type="text"
                     placeholder="https://unsplash.com/photo-1..., https://unsplash.com/photo-2..."
                     onChange={e => updateWizardField('portfolio', 'workPhotos', e.target.value.split(','))}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                 </div>
                 <div>
@@ -486,13 +474,13 @@ export const PartnerView: React.FC = () => {
                     type="text"
                     placeholder="E.g. Certified Leakage Technician, Best Mason Award 2026"
                     onChange={e => updateWizardField('portfolio', 'awards', e.target.value.split(','))}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                 </div>
               </div>
               <div className="flex justify-between items-center pt-4">
                 <button onClick={prevStep} className="px-4 py-2 text-xs font-bold bg-slate-800 text-slate-350 rounded-xl">Back</button>
-                <button onClick={nextStep} className="px-5 py-2 text-xs btn-pink-gradient rounded-xl">Continue</button>
+                <button onClick={nextStep} className="px-5 py-2 text-xs btn-cyan-gradient rounded-xl">Continue</button>
               </div>
             </div>
           )}
@@ -511,7 +499,7 @@ export const PartnerView: React.FC = () => {
                       onClick={() => setPartnerReg(prev => ({ ...prev, availabilityStatus: st as any }))}
                       className={`py-3 text-xs font-bold rounded-2xl border transition-all ${
                         partnerReg.availabilityStatus === st 
-                          ? 'bg-pink-500/10 border-pink-500 text-pink-400' 
+                          ? 'bg-cyan-500/10 border-cyan-500 text-cyan-400' 
                           : 'bg-slate-950 border-white/5 text-slate-400 hover:text-white'
                       }`}
                     >
@@ -522,22 +510,22 @@ export const PartnerView: React.FC = () => {
               </div>
               <div className="flex justify-between items-center pt-4">
                 <button onClick={prevStep} className="px-4 py-2 text-xs font-bold bg-slate-800 text-slate-350 rounded-xl">Back</button>
-                <button onClick={nextStep} className="px-5 py-2 text-xs btn-pink-gradient rounded-xl">Continue</button>
+                <button onClick={nextStep} className="px-5 py-2 text-xs btn-cyan-gradient rounded-xl">Continue</button>
               </div>
             </div>
           )}
 
-          {/* Step 7: Onboard Complete Pending state */}
+          {/* Step 7: Onboard Complete */}
           {currentStep === 7 && (
             <div className="space-y-4 text-center">
-              <Clock className="h-16 w-16 text-pink-500 mx-auto animate-pulse" />
+              <Clock className="h-16 w-16 text-cyan-500 mx-auto animate-pulse" />
               <h3 className="text-lg font-black text-white uppercase tracking-wider">Step 7: Verification Review</h3>
               <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
                 Your onboarding logs are ready. Proceed to submit your application to the Admin queue for document validation.
               </p>
               <div className="flex justify-center gap-1.5 pt-4">
-                <button onClick={prevStep} className="px-4 py-2 text-xs font-bold bg-slate-800 text-slate-350 rounded-xl">Back</button>
-                <button onClick={handleFinalSubmit} className="px-6 py-2.5 text-xs btn-pink-gradient rounded-xl">Submit Application</button>
+                <button onClick={prevStep} className="px-4 py-2 text-xs font-bold bg-slate-800 text-slate-355 rounded-xl">Back</button>
+                <button onClick={handleFinalSubmit} className="px-6 py-2.5 text-xs btn-cyan-gradient rounded-xl">Submit Application</button>
               </div>
             </div>
           )}
@@ -547,7 +535,6 @@ export const PartnerView: React.FC = () => {
     );
   };
 
-  // Render Dashboard
   const renderDashboard = () => {
     if (!activePartner) return null;
 
@@ -599,12 +586,12 @@ export const PartnerView: React.FC = () => {
         {/* Profile completion slider */}
         <div className="rounded-3xl bg-slate-900 border border-white/5 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h4 className="text-xs font-black uppercase text-pink-400 tracking-wider">Profile Setup Index</h4>
+            <h4 className="text-xs font-black uppercase text-cyan-400 tracking-wider">Profile Setup Index</h4>
             <p className="text-[10px] text-slate-400 mt-0.5">Complete files to get recommended first on customer searches.</p>
           </div>
           <div className="flex items-center gap-3 w-full sm:max-w-xs">
             <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-white/5">
-              <div className="bg-pink-500 h-full transition-all duration-500" style={{ width: `${calculateProfilePercentage()}%` }} />
+              <div className="bg-cyan-500 h-full transition-all duration-500" style={{ width: `${calculateProfilePercentage()}%` }} />
             </div>
             <span className="text-xs font-bold text-white shrink-0">{calculateProfilePercentage()}%</span>
           </div>
@@ -619,13 +606,13 @@ export const PartnerView: React.FC = () => {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{t('earnings')}</span>
                 <h3 className="text-2xl font-black text-white mt-1">₹{earningsVal}</h3>
               </div>
-              <span className="h-10 w-10 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center">
+              <span className="h-10 w-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
                 <Wallet className="h-5 w-5" />
               </span>
             </div>
             <button 
               onClick={() => setWithdrawOpen(true)}
-              className="mt-6 w-full rounded-xl btn-pink-gradient py-2 text-xs font-bold uppercase"
+              className="mt-6 w-full rounded-xl btn-cyan-gradient py-2 text-xs font-bold uppercase"
             >
               Withdraw Money
             </button>
@@ -650,15 +637,15 @@ export const PartnerView: React.FC = () => {
           <div className="rounded-3xl bg-slate-900 border border-white/5 p-6 shadow-md">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{t('ratingScoreLabel')}</span>
             <h3 className="text-2xl font-black text-white mt-1 flex items-center gap-1">★ {activePartner.rating}</h3>
-            <span className="text-[9px] text-slate-450 block mt-4">Based on {activePartner.reviewsCount} jobs</span>
+            <span className="text-[9px] text-slate-455 block mt-4">Based on {activePartner.reviewsCount} jobs</span>
           </div>
 
         </section>
 
         {/* AI Business Forecasting & Insights */}
         <section className="rounded-3xl border border-white/5 bg-slate-900/60 p-5 shadow-xl backdrop-blur-md space-y-4">
-          <div className="flex items-center gap-2 text-pink-400">
-            <Brain className="h-5 w-5 text-pink-500 animate-pulse shrink-0" />
+          <div className="flex items-center gap-2 text-cyan-400">
+            <Brain className="h-5 w-5 text-cyan-455 animate-pulse shrink-0" />
             <h3 className="text-xs font-black uppercase text-white tracking-widest">AI Merchant Operations forecast</h3>
           </div>
           <div className="grid sm:grid-cols-4 gap-4 text-xs">
@@ -671,7 +658,7 @@ export const PartnerView: React.FC = () => {
             </div>
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 space-y-2">
               <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider">Suggested service Pricing</span>
-              <div className="text-lg font-black text-pink-400">₹{activePartner.price + 40} <span className="text-[9px] text-slate-500 font-semibold">/visit</span></div>
+              <div className="text-lg font-black text-cyan-400">₹{activePartner.price + 40} <span className="text-[9px] text-slate-500 font-semibold">/visit</span></div>
               <p className="text-[10px] text-slate-450 leading-relaxed">
                 Suggested base rate adjustments. Market indices are high, and your current rating is {activePartner.rating}/5.
               </p>
@@ -679,7 +666,7 @@ export const PartnerView: React.FC = () => {
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 space-y-2">
               <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider">Optimal Dispatch Hours</span>
               <div className="text-sm font-black text-white flex items-center gap-1">
-                <Clock className="h-4 w-4 text-pink-400" />
+                <Clock className="h-4 w-4 text-cyan-400" />
                 <span>Tue, 10 AM - 1 PM</span>
               </div>
               <p className="text-[10px] text-slate-450 leading-relaxed">
@@ -688,7 +675,7 @@ export const PartnerView: React.FC = () => {
             </div>
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 space-y-2">
               <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider">Suggestions for profile visibility</span>
-              <div className="text-[10px] font-bold text-white flex items-center gap-1 text-amber-450">
+              <div className="text-[10px] font-bold text-white flex items-center gap-1 text-amber-500">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                 <span>Upload Certifications</span>
               </div>
@@ -702,7 +689,7 @@ export const PartnerView: React.FC = () => {
         {/* 2. Availability sliders & Holiday Mode */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="rounded-3xl bg-slate-900 border border-white/5 p-5 space-y-4">
-            <h3 className="text-xs font-black uppercase text-pink-400 tracking-wider">Availability Settings</h3>
+            <h3 className="text-xs font-black uppercase text-cyan-400 tracking-wider">Availability Settings</h3>
             <div className="flex items-center justify-between">
               <div>
                 <span className="font-extrabold text-white text-xs block">Holiday Mode Status</span>
@@ -727,15 +714,14 @@ export const PartnerView: React.FC = () => {
                 max="50" 
                 value={activePartner.serviceRadius}
                 onChange={e => setPartners(prev => prev.map(p => p.id === activePartner.id ? { ...p, serviceRadius: parseInt(e.target.value) } : p))}
-                className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-cyan-400"
               />
             </div>
           </div>
 
-          {/* Edit pricing */}
           <div className="rounded-3xl bg-slate-900 border border-white/5 p-5 flex flex-col justify-between">
             <div>
-              <h3 className="text-xs font-black uppercase text-pink-400 tracking-wider">Price Configuration</h3>
+              <h3 className="text-xs font-black uppercase text-cyan-400 tracking-wider">Price Configuration</h3>
               <p className="text-[10px] text-slate-400 mt-0.5">Define your hourly visit charge for customers</p>
             </div>
             <div className="flex items-center gap-3 mt-4">
@@ -744,7 +730,7 @@ export const PartnerView: React.FC = () => {
                 type="number"
                 value={activePartner.price}
                 onChange={e => setPartners(prev => prev.map(p => p.id === activePartner.id ? { ...p, price: parseFloat(e.target.value) || 0 } : p))}
-                className="w-24 rounded-xl border border-white/10 bg-slate-950 px-3 py-1.5 text-xs outline-none focus:border-pink-500 text-white font-bold"
+                className="w-24 rounded-xl border border-white/10 bg-slate-950 px-3 py-1.5 text-xs outline-none focus:border-cyan-400 text-white font-bold"
               />
               <span className="text-xs text-slate-500">per service visit</span>
             </div>
@@ -754,22 +740,22 @@ export const PartnerView: React.FC = () => {
         {/* 3. Incoming requests */}
         {pendingJobs.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-sm font-black uppercase text-pink-400 tracking-wider flex items-center gap-2 animate-pulse">
+            <h2 className="text-sm font-black uppercase text-cyan-400 tracking-wider flex items-center gap-2 animate-pulse">
               <Activity className="h-4.5 w-4.5 shrink-0" />
               <span>Incoming Customer Service Requests ({pendingJobs.length})</span>
             </h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {pendingJobs.map(job => (
-                <div key={job.id} className="rounded-3xl border border-pink-500/30 bg-slate-900 p-5 shadow-xl relative overflow-hidden flex flex-col justify-between">
-                  <div className="absolute top-0 right-0 bg-pink-500 text-white text-[9px] font-black uppercase px-3 py-1 rounded-bl-xl tracking-wider">
+                <div key={job.id} className="rounded-3xl border border-cyan-500/30 bg-slate-900 p-5 shadow-xl relative overflow-hidden flex flex-col justify-between">
+                  <div className="absolute top-0 right-0 bg-cyan-500 text-white text-[9px] font-black uppercase px-3 py-1 rounded-bl-xl tracking-wider">
                     Alert
                   </div>
                   <div>
-                    <span className="text-[9px] font-bold text-pink-400 block uppercase tracking-wider">{t(`categories.${job.category}`)}</span>
+                    <span className="text-[9px] font-bold text-cyan-400 block uppercase tracking-wider">{t(`categories.${job.category}`)}</span>
                     <h4 className="text-xs font-black text-white mt-1">{job.title}</h4>
                     <div className="mt-3 space-y-1 text-xs text-slate-400">
                       <p>📍 Address: Velachery Sector 5, Chennai</p>
-                      <p>💰 Est. Earnings: <span className="text-pink-400 font-extrabold">₹{job.price}</span></p>
+                      <p>💰 Est. Earnings: <span className="text-cyan-400 font-extrabold">₹{job.price}</span></p>
                     </div>
                   </div>
                   <div className="mt-5 flex gap-2 pt-3 border-t border-white/5">
@@ -777,12 +763,12 @@ export const PartnerView: React.FC = () => {
                       onClick={() => handleReject(job.id)}
                       className="flex-1 rounded-xl border border-white/5 bg-slate-950 py-2.5 text-xs font-bold text-slate-450 hover:text-white flex items-center justify-center gap-1 transition-all"
                     >
-                      <X className="h-4 w-4 text-pink-500 shrink-0" />
+                      <X className="h-4 w-4 text-cyan-455 shrink-0" />
                       <span>{t('reject')}</span>
                     </button>
                     <button
                       onClick={() => handleAccept(job.id)}
-                      className="flex-1 rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black flex items-center justify-center gap-1"
+                      className="flex-1 rounded-xl btn-cyan-gradient py-2.5 text-xs uppercase font-black flex items-center justify-center gap-1"
                     >
                       <Check className="h-4 w-4 shrink-0" />
                       <span>{t('accept')}</span>
@@ -797,13 +783,13 @@ export const PartnerView: React.FC = () => {
         {/* 4. Maps navigation if job is active */}
         {activeJobs.length > 0 && (
           <div className="rounded-3xl border border-white/5 bg-slate-900 p-6 shadow-md space-y-4">
-            <h3 className="text-xs font-black uppercase text-pink-400 tracking-wider">Google GPS Navigation</h3>
+            <h3 className="text-xs font-black uppercase text-cyan-400 tracking-wider">Google GPS Navigation</h3>
             <div className="relative h-48 w-full rounded-2xl overflow-hidden bg-slate-950 border border-white/5 flex items-center justify-center">
-              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#EC4899_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
-              <svg className="absolute inset-0 w-full h-full stroke-pink-500/20 stroke-[3] fill-none">
+              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#00E5FF_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
+              <svg className="absolute inset-0 w-full h-full stroke-cyan-500/20 stroke-[3] fill-none">
                 <path d="M 10,10 L 150,120 L 300,160 H 600" />
               </svg>
-              <div className="absolute left-[80%] top-[80%] bg-pink-500 text-white text-[9px] px-2 py-0.5 rounded shadow font-black uppercase tracking-wider">
+              <div className="absolute left-[80%] top-[80%] bg-cyan-500 text-white text-[9px] px-2 py-0.5 rounded shadow font-black uppercase tracking-wider">
                 Client Address
               </div>
               <div className="absolute bottom-3 left-3 bg-slate-900/90 border border-white/5 px-2.5 py-1.5 rounded-xl text-[9px] text-slate-400">
@@ -814,17 +800,17 @@ export const PartnerView: React.FC = () => {
           </div>
         )}
 
-        {/* 5. Withdrawal Modal */}
+        {/* 5. Payout Modal */}
         {withdrawOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
             <div className="glass-premium max-w-sm w-full rounded-3xl p-6 shadow-2xl relative border border-white/10 mx-4">
               <button 
                 onClick={() => setWithdrawOpen(false)}
-                className="absolute right-4 top-4 p-1.5 rounded-lg hover:bg-slate-800 text-slate-450"
+                className="absolute right-4 top-4 p-1.5 rounded-lg hover:bg-slate-800 text-slate-455"
               >
                 <X className="h-5 w-5" />
               </button>
-              <div className="flex items-center gap-2 mb-4 text-pink-400">
+              <div className="flex items-center gap-2 mb-4 text-cyan-400">
                 <Wallet className="h-5 w-5 shrink-0" />
                 <h3 className="text-xs font-black tracking-widest uppercase text-white">Withdraw Payout</h3>
               </div>
@@ -837,7 +823,7 @@ export const PartnerView: React.FC = () => {
                     value={withdrawAmount}
                     onChange={e => setWithdrawAmount(e.target.value)}
                     max={earningsVal}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     placeholder="Amount"
                     required
                   />
@@ -850,7 +836,7 @@ export const PartnerView: React.FC = () => {
                     type="text"
                     value={upiId}
                     onChange={e => setUpiId(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     placeholder="name@upi"
                     required
                   />
@@ -858,7 +844,7 @@ export const PartnerView: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black tracking-wider"
+                  className="w-full rounded-xl btn-cyan-gradient py-2.5 text-xs uppercase font-black tracking-wider"
                 >
                   Verify & Dispatch Fund
                 </button>
@@ -872,10 +858,10 @@ export const PartnerView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-slate-100 pb-16">
+    <div className="min-h-screen bg-[#0B1020] text-slate-100 pb-16">
       
       {/* Banner */}
-      <section className="bg-gradient-to-r from-accent/15 via-slate-900 to-[#0F172A] py-12 px-4 border-b border-white/5">
+      <section className="bg-gradient-to-r from-indigo-500/10 via-slate-900 to-[#0B1020] py-12 px-4 border-b border-white/5">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -887,7 +873,6 @@ export const PartnerView: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick profile selection select tab */}
           <div className="flex items-center gap-3">
             {!showRegisterWizard && (
               <div className="flex items-center space-x-2">
@@ -895,7 +880,7 @@ export const PartnerView: React.FC = () => {
                 <select 
                   value={selectedPartnerId}
                   onChange={e => setSelectedPartnerId(e.target.value)}
-                  className="bg-slate-900 border border-white/5 rounded-xl px-3 py-2 text-xs font-bold text-pink-400 outline-none cursor-pointer"
+                  className="bg-slate-900 border border-white/5 rounded-xl px-3 py-2 text-xs font-bold text-cyan-400 outline-none cursor-pointer"
                 >
                   {partners.map(p => (
                     <option key={p.id} value={p.id} className="bg-slate-950">
@@ -920,7 +905,7 @@ export const PartnerView: React.FC = () => {
                 });
                 setSelfieScanned(false);
               }}
-              className="rounded-xl bg-slate-800 border border-white/5 px-4 py-2.5 text-xs font-black uppercase tracking-wider hover:border-pink-500 hover:text-pink-400 text-white transition-all cursor-pointer"
+              className="rounded-xl bg-slate-800 border border-white/5 px-4 py-2.5 text-xs font-black uppercase tracking-wider hover:border-cyan-400 hover:text-cyan-400 text-white transition-all cursor-pointer"
             >
               {t('onboardPartner')}
             </button>

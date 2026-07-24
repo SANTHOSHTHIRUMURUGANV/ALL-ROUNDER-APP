@@ -12,7 +12,7 @@ const LANGUAGES_LIST = [
   { code: 'hi', label: 'हिन्दी' },
   { code: 'te', label: 'తెలుగు' },
   { code: 'kn', label: 'ಕನ್ನಡ' },
-  { code: 'ml', label: 'മലയാളം' },
+  { code: 'ml', label: 'മലയാളம்' },
   { code: 'ar', label: 'العربية' },
   { code: 'fr', label: 'Français' },
   { code: 'de', label: 'Deutsch' },
@@ -87,20 +87,20 @@ export const Navbar: React.FC = () => {
   const unreadNotifs = notifications.filter(n => !n.read).length;
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0F172A]/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0B1020]/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Left Logo */}
         <div className="flex items-center space-x-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-pink-500 to-fuchsia-600 text-white shadow-lg animate-pulse">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-cyan-400 to-indigo-500 text-white shadow-lg animate-pulse">
             <span className="text-xl font-bold font-mono">R</span>
             <div className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border border-slate-900 shadow-md" />
           </div>
           <div>
-            <span className="bg-gradient-to-r from-white via-pink-400 to-fuchsia-500 bg-clip-text text-xl font-black tracking-tight text-transparent">
+            <span className="bg-gradient-to-r from-white via-cyan-300 to-indigo-400 bg-clip-text text-xl font-black tracking-tight text-transparent">
               {t('brand')}
             </span>
-            <span className="hidden sm:block text-[9px] text-pink-400 font-bold uppercase tracking-wider">
+            <span className="hidden sm:block text-[9px] text-cyan-400 font-bold uppercase tracking-wider">
               A2Z Super Platform
             </span>
           </div>
@@ -112,7 +112,7 @@ export const Navbar: React.FC = () => {
             onClick={() => setRole('customer')}
             className={`flex items-center space-x-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
               role === 'customer'
-                ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white shadow-lg'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -124,7 +124,7 @@ export const Navbar: React.FC = () => {
             onClick={() => setRole('partner')}
             className={`flex items-center space-x-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
               role === 'partner'
-                ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white shadow-lg'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -136,7 +136,7 @@ export const Navbar: React.FC = () => {
             onClick={() => setRole('admin')}
             className={`flex items-center space-x-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
               role === 'admin'
-                ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white shadow-lg'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -151,12 +151,12 @@ export const Navbar: React.FC = () => {
           {/* Geocoder Location Selector Trigger */}
           <button
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center space-x-1 rounded-xl border border-white/5 bg-slate-900/60 px-3 py-2 text-xs font-bold text-slate-350 hover:border-pink-500/50 hover:bg-slate-900 transition-all max-w-[120px] sm:max-w-[180px] overflow-hidden truncate"
+            className="flex items-center space-x-1 rounded-xl border border-white/5 bg-slate-900/60 px-3 py-2 text-xs font-bold text-slate-350 hover:border-cyan-400/50 hover:bg-slate-900 transition-all max-w-[120px] sm:max-w-[180px] overflow-hidden truncate"
             title="Click to configure precise Geolocation coordinates"
           >
-            <MapPin className="h-3.5 w-3.5 text-pink-505 shrink-0 text-pink-500" />
+            <MapPin className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
             <span className="truncate hidden sm:inline">{locationDetails ? locationDetails.address : location}</span>
-            <span className="sm:hidden text-[9px] uppercase tracking-wide text-pink-400">GPS</span>
+            <span className="sm:hidden text-[9px] uppercase tracking-wide text-cyan-400">GPS</span>
           </button>
 
           {/* Wallet Drawer */}
@@ -184,10 +184,10 @@ export const Navbar: React.FC = () => {
                       type="number"
                       value={depositAmount}
                       onChange={e => setDepositAmount(e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                      className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                       placeholder="Amount"
                     />
-                    <button type="submit" className="rounded-xl btn-pink-gradient px-3 py-2 text-xs flex items-center justify-center shrink-0">
+                    <button type="submit" className="rounded-xl btn-cyan-gradient px-3 py-2 text-xs flex items-center justify-center shrink-0">
                       <Plus className="h-4 w-4 text-white" />
                     </button>
                   </div>
@@ -227,7 +227,7 @@ export const Navbar: React.FC = () => {
                   <button
                     key={lang.code}
                     onClick={() => { setLanguage(lang.code as Language); setShowLangDropdown(false); }}
-                    className={`flex w-full items-center rounded-xl px-2.5 py-1.5 text-xs font-bold transition-colors ${language === lang.code ? 'bg-pink-500/10 text-pink-400' : 'hover:bg-white/5 text-slate-300 hover:text-white'}`}
+                    className={`flex w-full items-center rounded-xl px-2.5 py-1.5 text-xs font-bold transition-colors ${language === lang.code ? 'bg-cyan-500/10 text-cyan-400' : 'hover:bg-white/5 text-slate-300 hover:text-white'}`}
                   >
                     {lang.label}
                   </button>
@@ -249,14 +249,14 @@ export const Navbar: React.FC = () => {
             >
               <Bell className="h-4.5 w-4.5" />
               {unreadNotifs > 0 && (
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-pink-500" />
+                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-cyan-400" />
               )}
             </button>
             {showNotifDropdown && (
               <div className="absolute right-0 mt-2.5 w-72 origin-top-right rounded-2xl border border-white/10 bg-slate-900 p-3 shadow-2xl z-50 divide-y divide-white/5 max-h-64 overflow-y-auto">
-                <span className="text-[10px] font-black uppercase text-pink-400 block tracking-wider mb-2">{t('notification')}</span>
+                <span className="text-[10px] font-black uppercase text-cyan-455 block tracking-wider mb-2">{t('notification')}</span>
                 {notifications.length === 0 ? (
-                  <p className="text-[10px] text-slate-500 py-4 text-center">No notifications</p>
+                  <p className="text-[10px] text-slate-555 py-4 text-center">No notifications</p>
                 ) : (
                   notifications.map(n => (
                     <div key={n.id} className="py-2.5 text-xs">
@@ -284,14 +284,14 @@ export const Navbar: React.FC = () => {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex items-center gap-2 mb-4 text-pink-400">
-              <Compass className="h-5 w-5 shrink-0" />
+            <div className="flex items-center gap-2 mb-4 text-cyan-400">
+              <Compass className="h-5 w-5 shrink-0 animate-spin" />
               <h3 className="text-sm font-black uppercase tracking-wider text-white">Precise Location Geocoding</h3>
             </div>
 
             {/* Geocode outputs */}
             <div className="bg-slate-950 p-4 rounded-2xl border border-white/5 space-y-2 mb-4 text-slate-350">
-              <h4 className="text-[10px] font-black uppercase text-pink-450 tracking-widest mb-1.5">GPS Location Coordinates</h4>
+              <h4 className="text-[10px] font-black uppercase text-cyan-400 tracking-widest mb-1.5">GPS Location Coordinates</h4>
               <div>📍 Address: <span className="font-bold text-white">{locationDetails?.address || 'N/A'}</span></div>
               <div>🏙️ City: <span className="font-bold text-white">{locationDetails?.city || 'N/A'}</span></div>
               <div>🏢 District: <span className="font-bold text-white">{locationDetails?.district || 'N/A'}</span></div>
@@ -310,7 +310,7 @@ export const Navbar: React.FC = () => {
                   await requestLiveLocation();
                   setShowLocationModal(false);
                 }}
-                className="w-full py-2.5 rounded-xl btn-pink-gradient text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow"
+                className="w-full py-2.5 rounded-xl btn-cyan-gradient text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow"
               >
                 <Navigation className="h-4 w-4" />
                 <span>Automatically Detect GPS Location</span>
@@ -323,7 +323,7 @@ export const Navbar: React.FC = () => {
                     <button
                       key={preset.name}
                       onClick={() => selectPreset(preset)}
-                      className="p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-pink-500 hover:text-pink-400 text-left font-bold"
+                      className="p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-cyan-400 hover:text-cyan-400 text-left font-bold"
                     >
                       📍 {preset.name} ({preset.postcode})
                     </button>
@@ -340,14 +340,14 @@ export const Navbar: React.FC = () => {
                     value={manualLat}
                     onChange={e => setManualLat(e.target.value)}
                     placeholder="Latitude"
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-1.5 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-1.5 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                   <input
                     type="text"
                     value={manualLng}
                     onChange={e => setManualLng(e.target.value)}
                     placeholder="Longitude"
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-1.5 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-1.5 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                   <button type="submit" className="rounded-xl bg-slate-800 hover:bg-slate-700 px-3 text-xs font-bold text-white uppercase shrink-0">
                     Set

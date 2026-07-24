@@ -53,7 +53,7 @@ export const AdminView: React.FC = () => {
     confetti({
       particleCount: 100,
       spread: 60,
-      colors: ['#EC4899', '#3B82F6']
+      colors: ['#00E5FF', '#6C63FF']
     });
   };
 
@@ -88,20 +88,18 @@ export const AdminView: React.FC = () => {
     setBroadcastText('');
   };
 
-  // Handle dismiss fraud log
   const handleDismissFraudLog = (id: string) => {
     setFraudLogs(prev => prev.filter(l => l.id !== id));
     addNotification('Security Alert Dismissed 🛡️', `Alert ${id} cleared from logs.`, 'info');
   };
 
-  // List pending partners
   const pendingPartners = partners.filter(p => p.adminStatus === 'pending');
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-slate-100">
+    <div className="min-h-screen bg-[#0B1020] text-slate-100">
       
       {/* Header Banner */}
-      <section className="bg-gradient-to-r from-accent/15 via-slate-900 to-[#0F172A] py-12 px-4 border-b border-white/5">
+      <section className="bg-gradient-to-r from-indigo-500/15 via-slate-900 to-[#0B1020] py-12 px-4 border-b border-white/5">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🛡️</span>
@@ -126,7 +124,7 @@ export const AdminView: React.FC = () => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-300 shrink-0 flex items-center gap-1 ${
                 activeTab === tab.id
-                  ? 'btn-pink-gradient text-white shadow-md'
+                  ? 'btn-cyan-gradient text-white shadow-md'
                   : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -143,10 +141,10 @@ export const AdminView: React.FC = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-sm font-black uppercase text-pink-400 tracking-wider">{t('kycQueue')}</h3>
+                <h3 className="text-sm font-black uppercase text-cyan-400 tracking-wider">{t('kycQueue')}</h3>
                 <p className="text-[10px] text-slate-550 font-bold">Audit government IDs, biometric selfie matches, and portfolios</p>
               </div>
-              <span className="text-[10px] font-black uppercase text-pink-455 tracking-wider bg-pink-500/10 px-2.5 py-1 rounded-xl">
+              <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider bg-cyan-500/10 px-2.5 py-1 rounded-xl">
                 {pendingPartners.length} Profiles Pending
               </span>
             </div>
@@ -160,7 +158,7 @@ export const AdminView: React.FC = () => {
             ) : (
               <div className="grid sm:grid-cols-2 gap-6">
                 {pendingPartners.map(partner => (
-                  <div key={partner.id} className="rounded-3xl bg-slate-900 border border-white/5 p-5 shadow-lg flex flex-col justify-between hover:border-pink-500/30 transition-all duration-300 animate-in fade-in">
+                  <div key={partner.id} className="rounded-3xl bg-slate-900 border border-white/5 p-5 shadow-lg flex flex-col justify-between hover:border-cyan-400/30 transition-all duration-300 animate-in fade-in">
                     <div>
                       <div className="flex gap-4">
                         <img src={partner.avatar} className="h-16 w-16 rounded-xl object-cover border border-white/10 shrink-0" />
@@ -168,7 +166,7 @@ export const AdminView: React.FC = () => {
                           <h4 className="text-sm font-black text-white">{partner.name}</h4>
                           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">{partner.businessName}</span>
                           <div className="mt-1 flex items-center gap-1.5">
-                            <span className="px-2 py-0.5 rounded bg-slate-800 text-[9px] text-pink-400 font-black uppercase">
+                            <span className="px-2 py-0.5 rounded bg-slate-800 text-[9px] text-cyan-400 font-black uppercase">
                               {t(`categories.${partner.category}`, partner.category)}
                             </span>
                             <span className="text-[10px] text-slate-500 font-semibold">{partner.experience} Yrs Exp</span>
@@ -196,7 +194,7 @@ export const AdminView: React.FC = () => {
                         </div>
                         <div className="flex justify-between items-center">
                           <span>pricing setup:</span>
-                          <span className="font-black text-pink-400">₹{partner.price} / Visit</span>
+                          <span className="font-black text-cyan-400">₹{partner.price} / Visit</span>
                         </div>
                       </div>
                     </div>
@@ -207,12 +205,12 @@ export const AdminView: React.FC = () => {
                         onClick={() => handleReject(partner.id)}
                         className="flex-1 rounded-xl border border-white/5 bg-slate-950 py-2.5 text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center gap-1 transition-all"
                       >
-                        <X className="h-4 w-4 text-pink-500 shrink-0" />
+                        <X className="h-4 w-4 text-cyan-500 shrink-0" />
                         <span>{t('reject')}</span>
                       </button>
                       <button
                         onClick={() => handleApprove(partner.id)}
-                        className="flex-1 rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black flex items-center justify-center gap-1"
+                        className="flex-1 rounded-xl btn-cyan-gradient py-2.5 text-xs uppercase font-black flex items-center justify-center gap-1"
                       >
                         <Check className="h-4 w-4 shrink-0" />
                         <span>{t('verifyApprove')}</span>
@@ -229,7 +227,7 @@ export const AdminView: React.FC = () => {
         {/* Tab 2: Operations Log */}
         {activeTab === 'operations' && (
           <div className="space-y-6">
-            <h3 className="text-xs font-black uppercase text-pink-400 tracking-wider">System Operations & Statistics</h3>
+            <h3 className="text-xs font-black uppercase text-cyan-400 tracking-wider">System Operations & Statistics</h3>
             
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-3xl bg-slate-900 border border-white/5 p-5 shadow-sm">
@@ -241,7 +239,7 @@ export const AdminView: React.FC = () => {
               <div className="rounded-3xl bg-slate-900 border border-white/5 p-5 shadow-sm">
                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{t('totalBookings')}</span>
                 <h3 className="text-xl sm:text-2xl font-black text-white mt-1">{bookings.length + 42} Completed</h3>
-                <span className="text-[9px] text-pink-400 font-bold block mt-2">Active live dispatch runs</span>
+                <span className="text-[9px] text-cyan-400 font-bold block mt-2">Active live dispatch runs</span>
               </div>
 
               <div className="rounded-3xl bg-slate-900 border border-white/5 p-5 shadow-sm">
@@ -262,14 +260,14 @@ export const AdminView: React.FC = () => {
             {/* AI dynamic pricing widget */}
             <div className="rounded-3xl bg-slate-900 border border-white/5 p-6 shadow-sm max-w-xl space-y-4">
               <div className="flex justify-between items-center">
-                <h4 className="text-xs font-black uppercase text-pink-400 tracking-wider">{t('dynamicSurge')}</h4>
+                <h4 className="text-xs font-black uppercase text-cyan-400 tracking-wider">{t('dynamicSurge')}</h4>
                 <button 
                   onClick={() => {
                     setAiSurgeActive(!aiSurgeActive);
                     addNotification('AI Surge Changed 🤖', `Dynamic pricing mode is now ${!aiSurgeActive ? 'Enabled' : 'Disabled'}.`, 'info');
                   }}
                   className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider border ${
-                    aiSurgeActive ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-950 border-white/5 text-slate-555'
+                    aiSurgeActive ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-950 border-white/5 text-slate-500'
                   }`}
                 >
                   {aiSurgeActive ? 'AI Controlled' : 'Manual Override'}
@@ -279,7 +277,7 @@ export const AdminView: React.FC = () => {
               <div>
                 <div className="flex justify-between text-xs font-bold mb-1.5 text-slate-300">
                   <span>Current Surge Multiplier</span>
-                  <span className="text-pink-400">{surgeMultiplier}x</span>
+                  <span className="text-cyan-400">{surgeMultiplier}x</span>
                 </div>
                 <input 
                   type="range" 
@@ -289,7 +287,7 @@ export const AdminView: React.FC = () => {
                   value={surgeMultiplier}
                   onChange={e => setSurgeMultiplier(parseFloat(e.target.value))}
                   disabled={aiSurgeActive}
-                  className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                  className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-cyan-400"
                 />
               </div>
             </div>
@@ -299,7 +297,7 @@ export const AdminView: React.FC = () => {
         {/* Tab 3: Coupons */}
         {activeTab === 'coupons' && (
           <div className="space-y-6 animate-in fade-in duration-300">
-            <h3 className="text-xs font-black uppercase text-pink-400 tracking-wider">{t('couponManager')}</h3>
+            <h3 className="text-xs font-black uppercase text-cyan-400 tracking-wider">{t('couponManager')}</h3>
             <div className="rounded-3xl bg-slate-900 border border-white/5 p-6 shadow-sm max-w-xl">
               <form onSubmit={handleAddCoupon} className="flex gap-2">
                 <input
@@ -307,7 +305,7 @@ export const AdminView: React.FC = () => {
                   placeholder="New Coupon Code (e.g. PINK99)"
                   value={newCouponCode}
                   onChange={e => setNewCouponCode(e.target.value)}
-                  className="flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                  className="flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   required
                 />
                 <input
@@ -315,10 +313,10 @@ export const AdminView: React.FC = () => {
                   placeholder="Discount %"
                   value={newCouponDiscount}
                   onChange={e => setNewCouponDiscount(e.target.value)}
-                  className="w-24 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                  className="w-24 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   required
                 />
-                <button type="submit" className="rounded-xl btn-pink-gradient px-4 py-2 text-xs font-bold uppercase shrink-0">
+                <button type="submit" className="rounded-xl btn-cyan-gradient px-4 py-2 text-xs font-bold uppercase shrink-0">
                   {t('addCoupon')}
                 </button>
               </form>
@@ -341,7 +339,7 @@ export const AdminView: React.FC = () => {
         {/* Tab 4: Emergency Broadcast */}
         {activeTab === 'broadcast' && (
           <div className="space-y-6 animate-in fade-in duration-300">
-            <h3 className="text-xs font-black uppercase text-pink-400 tracking-wider">{t('emergencyAlerts')}</h3>
+            <h3 className="text-xs font-black uppercase text-cyan-400 tracking-wider">{t('emergencyAlerts')}</h3>
             <div className="rounded-3xl bg-slate-900 border border-white/5 p-6 shadow-sm max-w-xl">
               <form onSubmit={handleSendBroadcast} className="space-y-4">
                 <div>
@@ -351,7 +349,7 @@ export const AdminView: React.FC = () => {
                     value={broadcastTitle}
                     onChange={e => setBroadcastTitle(e.target.value)}
                     placeholder="Alert Title"
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                     required
                   />
                 </div>
@@ -361,14 +359,14 @@ export const AdminView: React.FC = () => {
                     value={broadcastText}
                     onChange={e => setBroadcastText(e.target.value)}
                     placeholder="Broadcasting text details to users navbar..."
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white h-24 resize-none"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white h-24 resize-none"
                     required
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black tracking-widest flex items-center justify-center gap-1.5"
+                  className="w-full rounded-xl btn-cyan-gradient py-2.5 text-xs uppercase font-black tracking-widest flex items-center justify-center gap-1.5"
                 >
                   <BellRing className="h-4 w-4 shrink-0" />
                   <span>{t('transmitAlert')}</span>
@@ -383,7 +381,7 @@ export const AdminView: React.FC = () => {
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-sm font-black uppercase text-pink-400 tracking-wider">AI Security & Fraud Desk</h3>
+                <h3 className="text-sm font-black uppercase text-cyan-400 tracking-wider">AI Security & Fraud Desk</h3>
                 <p className="text-[10px] text-slate-550 font-bold">Biometrics audit, suspicious stripe payments, velocity check controls</p>
               </div>
               <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider animate-pulse">

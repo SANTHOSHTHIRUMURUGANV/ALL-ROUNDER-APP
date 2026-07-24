@@ -1,18 +1,11 @@
-# Checklist: Multilingual i18next & Precise GPS Geocoding
+# Tasks: AI Engine Integration
 
-- [x] Setup dependencies & initialization
-  - [x] Install `i18next` and `react-i18next` npm packages
-  - [x] Create 12 JSON translation files in `src/locales/`
-  - [x] Initialize `src/i18n.ts` and import it inside `src/main.tsx`
-- [x] Implement Geolocation & Reverse Geocoding (AppContext.tsx)
-  - [x] Request HTML5 Geolocation permission and track lat/lng
-  - [x] Fetch Nominatim OSM reverse geocoding to resolve street address, city, district, state, PIN, country
-  - [x] Save location details to Local Storage and support manual changes
-  - [x] Implement Haversine distance calculations (in KM and meters) and update partner directory details
-- [x] Translate all components using i18next `t(...)`
-  - [x] Update Navbar
-  - [x] Update AIChatbot
-  - [x] Update CustomerView
-  - [x] Update PartnerView
-  - [x] Update AdminView
-- [x] Verify build and reload local server
+- [x] Define AI Helper Models and NLP Intent Parsers inside AppContext.tsx
+- [x] Add Image Analysis diagnostic algorithms and mock fraud detection rules in AppContext.tsx
+- [x] Integrate AI Personalized Recommendations and Search Ranking in CustomerView.tsx
+- [x] Add the AI Image Diagnostic Uploader & Analyzer panel to CustomerView.tsx
+- [x] Add AI Smart Scheduling and Sentiment summaries to partner profiles in CustomerView.tsx
+- [x] Update AIChatbot.tsx logic to handle direct scheduling and service routing
+- [x] Add AI Business Insights & Forecasting charts to PartnerView.tsx
+- [x] Add AI Security Console & Fraud Log monitor to AdminView.tsx
+- [x] Validate production compilation build and verify website updates

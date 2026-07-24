@@ -28,14 +28,13 @@ export const AIChatbot: React.FC = () => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
   // Auto scroll
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
   // Speech Recognition hook
@@ -315,10 +314,10 @@ export const AIChatbot: React.FC = () => {
       
       {/* expanded chatbot frame */}
       {isOpen && (
-        <div className="mb-4 w-80 sm:w-96 rounded-3xl glass-premium border border-white/10 shadow-2xl flex flex-col overflow-hidden glow-pink-hover animate-in slide-in-from-bottom duration-300">
+        <div className="mb-4 w-80 sm:w-96 rounded-3xl glass-premium border border-white/10 shadow-2xl flex flex-col overflow-hidden glow-cyan-hover animate-in slide-in-from-bottom duration-300">
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-accent to-fuchsia-600 p-4 text-white flex items-center justify-between">
+          <div className="bg-gradient-to-r from-cyan-400 to-indigo-500 p-4 text-white flex items-center justify-between">
             <div className="flex items-center space-x-2.5">
               <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur">
                 <Bot className="h-5 w-5 text-white animate-pulse" />
@@ -328,7 +327,7 @@ export const AIChatbot: React.FC = () => {
                   AI Assistant
                   <Sparkles className="h-3.5 w-3.5 text-yellow-300 animate-bounce shrink-0" />
                 </h4>
-                <p className="text-[9px] text-white/70 font-semibold uppercase tracking-widest">AllCounter NLP Engine</p>
+                <p className="text-[9px] text-white/70 font-semibold uppercase tracking-widest">AllRounder NLP Engine</p>
               </div>
             </div>
             <button 
@@ -345,7 +344,7 @@ export const AIChatbot: React.FC = () => {
               <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
                 <div className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed ${
                   msg.sender === 'user'
-                    ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-br-none shadow-md'
+                    ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white rounded-br-none shadow-md'
                     : 'bg-slate-900 border border-white/5 text-slate-100 rounded-bl-none shadow-inner'
                 }`}>
                   <p className="whitespace-pre-wrap">{msg.text}</p>
@@ -360,7 +359,7 @@ export const AIChatbot: React.FC = () => {
                           act.onClick();
                           setIsOpen(false);
                         }}
-                        className="flex items-center space-x-1 px-3 py-1.5 rounded-xl btn-pink-gradient text-[10px] uppercase font-black tracking-wide"
+                        className="flex items-center space-x-1 px-3 py-1.5 rounded-xl btn-cyan-gradient text-[10px] uppercase font-black tracking-wide"
                       >
                         <Zap className="h-3 w-3" />
                         <span>{act.label}</span>
@@ -387,7 +386,7 @@ export const AIChatbot: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handleSend(pill.text)}
-                className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-900 border border-white/5 text-slate-300 hover:border-pink-500 hover:text-pink-400 transition-all shrink-0"
+                className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-900 border border-white/5 text-slate-300 hover:border-cyan-400 hover:text-cyan-400 transition-all shrink-0"
               >
                 {pill.label}
               </button>
@@ -413,11 +412,11 @@ export const AIChatbot: React.FC = () => {
               onChange={e => setInputText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder={isListening ? t('voiceSearch') : t('searchPlaceholder')}
-              className="flex-1 bg-slate-950 border border-white/5 rounded-xl px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+              className="flex-1 bg-slate-950 border border-white/5 rounded-xl px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
             />
             <button
               onClick={() => handleSend()}
-              className="p-2 rounded-xl btn-pink-gradient shadow-md shrink-0"
+              className="p-2 rounded-xl btn-cyan-gradient shadow-md shrink-0"
             >
               <Send className="h-4 w-4" />
             </button>
@@ -429,13 +428,13 @@ export const AIChatbot: React.FC = () => {
       {/* Floating button trigger */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="h-14 w-14 rounded-full bg-gradient-to-tr from-accent to-fuchsia-600 text-white shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50 hover:shadow-pink-500/30 relative border border-white/10 group cursor-pointer"
+        className="h-14 w-14 rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-500 text-white shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50 hover:shadow-cyan-500/30 relative border border-white/10 group cursor-pointer"
       >
         <Bot className="h-7 w-7 text-white" />
         <Sparkles className="absolute top-1 right-1 h-3.5 w-3.5 text-yellow-300 group-hover:animate-spin" />
         <span className="absolute -top-1 -left-1 flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-400"></span>
         </span>
       </button>
 

@@ -62,8 +62,8 @@ const CATEGORIES_DATA = [
 ];
 
 const OFFERS = [
-  { id: 'o-1', title: '50% OFF on Rides', code: 'CAB50', desc: 'Get up to ₹100 discount on your first cab/bike ride.', bg: 'from-pink-600 to-rose-700' },
-  { id: 'o-2', title: '₹199 Off Diagnostic Visit', code: 'FREEVISIT', desc: 'No service charge on plumber/painter consultation visits.', bg: 'from-fuchsia-600 to-pink-600' }
+  { id: 'o-1', title: '50% OFF on Rides', code: 'CAB50', desc: 'Get up to ₹100 discount on your first cab/bike ride.', bg: 'from-cyan-600 to-indigo-700' },
+  { id: 'o-2', title: '₹199 Off Diagnostic Visit', code: 'FREEVISIT', desc: 'No service charge on plumber/painter consultation visits.', bg: 'from-indigo-600 to-cyan-650' }
 ];
 
 const MOCK_SCAN_PHOTOS = [
@@ -120,6 +120,12 @@ export const CustomerView: React.FC = () => {
   const [activePartnerChat, setActivePartnerChat] = useState<Partner | null>(null);
   const [chatInputText, setChatInputText] = useState('');
   const [chatLogs, setChatLogs] = useState<{ sender: 'user' | 'partner', text: string, translatedText?: string }[]>([]);
+
+  // Cart price totals
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discount = (subtotal * discountPercent) / 100;
+  const deliveryFee = subtotal > 0 ? 40 : 0;
+  const totalAmount = Math.max(0, subtotal - discount + deliveryFee);
 
   // 1. Natural Language Search parsing
   const isSearchEmergency = /gas|fire|electrician fire|ambulance|smoke|short circuit|water block|leakage/i.test(searchQuery);
@@ -191,7 +197,6 @@ export const CustomerView: React.FC = () => {
       return matchesSearch && matchesAvailable && matchesEmergency && matchesDoorstep;
     })
     .sort((a, b) => {
-      // Dynamic priority if searching by specific keyword intent
       if (isSearchEmergency) {
         if (a.emergencyService !== b.emergencyService) return a.emergencyService ? -1 : 1;
       }
@@ -207,7 +212,6 @@ export const CustomerView: React.FC = () => {
         return distA - distB;
       }
 
-      // Default sorters
       if (sortBy === 'rating') return b.rating - a.rating;
       if (sortBy === 'distance') {
         const distA = parseFloat(a.distance) || 99;
@@ -218,12 +222,6 @@ export const CustomerView: React.FC = () => {
       if (sortBy === 'popularity') return b.popularity - a.popularity;
       return getRecommendationScore(b) - getRecommendationScore(a);
     });
-
-  // Calculations
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const deliveryFee = subtotal > 0 ? 50 : 0;
-  const discount = (subtotal * discountPercent) / 100;
-  const totalAmount = Math.max(0, subtotal + deliveryFee - discount);
 
   // Apply coupons
   const handleApplyCoupon = (e: React.FormEvent) => {
@@ -248,7 +246,6 @@ export const CustomerView: React.FC = () => {
       if (!success) return;
     }
 
-    // Place bookings
     cart.forEach(item => {
       const provider = partners.find(p => p.name === item.image) || partners[0];
       const bId = addBooking({
@@ -261,7 +258,6 @@ export const CustomerView: React.FC = () => {
         status: 'pending'
       });
 
-      // Simulate partner acceptance
       setTimeout(() => {
         updateBookingStatus(bId, 'accepted');
         setTimeout(() => {
@@ -273,7 +269,7 @@ export const CustomerView: React.FC = () => {
     confetti({
       particleCount: 150,
       spread: 70,
-      colors: ['#EC4899', '#D946EF', '#2563EB']
+      colors: ['#00E5FF', '#6C63FF', '#22C55E']
     });
 
     clearCart();
@@ -282,7 +278,6 @@ export const CustomerView: React.FC = () => {
     setCheckoutStep('details');
   };
 
-  // Direct Book from Profile
   const handleDirectBook = (partner: Partner) => {
     addToCart({
       id: `${partner.id}-booking`,
@@ -296,7 +291,6 @@ export const CustomerView: React.FC = () => {
     setIsCartOpen(true);
   };
 
-  // Chat submit mock with RTL auto-translation
   const handleSendChatMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInputText.trim()) return;
@@ -306,7 +300,6 @@ export const CustomerView: React.FC = () => {
 
     let transText = undefined;
     if (translateActive) {
-      // Simulating user typing in Tamil/Hindi, converting to English for partner
       if (/[அ-ஹ]/.test(userText)) {
         transText = `[AI Translated to English]: I want to confirm my schedule.`;
       } else {
@@ -339,37 +332,35 @@ export const CustomerView: React.FC = () => {
     setChatLogs([{ sender: 'partner', text: `Hello! I am your ${t(`categories.${p.category}`)} provider ${p.name}. How can I help you today?` }]);
   };
 
-  // Simulate photo uploader selection
   const handleChooseSamplePhoto = async (photo: typeof MOCK_SCAN_PHOTOS[0]) => {
     setScanningPhoto(photo.url);
     setLaserActive(true);
-    // Trigger Context simulation
     await analyzeImageFile(photo.file);
     setLaserActive(false);
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0F172A] text-slate-100 pb-16">
+    <div className="relative min-h-screen pb-16">
       
       {/* 1. Landing Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#0F172A] via-[#1E293B]/70 to-[#0F172A] py-16 px-4 text-center border-b border-white/5">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#EC4899_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
+      <section className="relative overflow-hidden py-16 px-4 text-center border-b border-white/5">
+        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#00E5FF_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
         
         <div className="relative mx-auto max-w-3xl space-y-4">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-500/10 px-3 py-1 text-xs font-bold text-pink-400 border border-pink-500/20">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-400 border border-cyan-500/20">
             <Cpu className="h-3.5 w-3.5 animate-spin" />
             🤖 AI-Powered Super Recommendation Engine Enabled
           </span>
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-none text-white">
-            {t('brand')}. <span className="bg-gradient-to-r from-pink-500 via-fuchsia-400 to-pink-500 bg-clip-text text-transparent">{t('slogan')}</span>
+            {t('brand')}. <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">{t('slogan')}</span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 font-semibold uppercase tracking-wider">
+          <p className="text-xs sm:text-sm text-slate-350 font-semibold uppercase tracking-wider">
             Verified Local Partners Onboarded Live with Biometrics Audit
           </p>
 
           {/* Search everything bar */}
           <div className="mx-auto mt-8 max-w-xl">
-            <div className="flex items-center rounded-2xl bg-slate-900 border border-white/5 p-2 shadow-2xl focus-within:border-pink-500/50 transition-all relative">
+            <div className="flex items-center rounded-2xl bg-slate-900 border border-white/5 p-2 shadow-2xl focus-within:border-cyan-400/50 transition-all relative">
               <Search className="h-5 w-5 text-slate-500 ml-2" />
               <input
                 type="text"
@@ -381,7 +372,7 @@ export const CustomerView: React.FC = () => {
               <div className="flex items-center gap-1.5 pr-2">
                 <button 
                   onClick={() => setIsVisionOpen(!isVisionOpen)}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-pink-400 shrink-0 flex items-center justify-center gap-1"
+                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 shrink-0 flex items-center justify-center gap-1"
                   title="AI Vision Camera Scanner"
                 >
                   <Camera className="h-4 w-4" />
@@ -424,8 +415,8 @@ export const CustomerView: React.FC = () => {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex items-center gap-2 mb-4 text-pink-400">
-              <Brain className="h-5 w-5 animate-pulse text-pink-500" />
+            <div className="flex items-center gap-2 mb-4 text-cyan-400">
+              <Brain className="h-5 w-5 animate-pulse text-cyan-450" />
               <h3 className="text-sm font-black uppercase tracking-wider text-white">AI Vision Damage Diagnostician</h3>
             </div>
 
@@ -438,7 +429,7 @@ export const CustomerView: React.FC = () => {
                     <button
                       key={p.name}
                       onClick={() => handleChooseSamplePhoto(p)}
-                      className="group relative h-24 rounded-2xl overflow-hidden border border-white/5 hover:border-pink-500 transition-all text-left"
+                      className="group relative h-24 rounded-2xl overflow-hidden border border-white/5 hover:border-cyan-400 transition-all text-left"
                     >
                       <img src={p.url} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform" />
                       <div className="absolute inset-0 bg-slate-950/60 p-2 flex flex-col justify-end">
@@ -456,27 +447,26 @@ export const CustomerView: React.FC = () => {
                     <>
                       <img src={scanningPhoto} className="h-full w-full object-cover" />
                       {laserActive && (
-                        <div className="absolute inset-x-0 h-1.5 bg-gradient-to-r from-transparent via-pink-500 to-transparent shadow-[0_0_8px_#EC4899] animate-bounce top-0" />
+                        <div className="absolute inset-x-0 h-1.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_8px_#00E5FF] animate-bounce top-0" />
                       )}
                     </>
                   ) : (
                     <Camera className="h-10 w-10 text-slate-700 animate-pulse" />
                   )}
                 </div>
-                {isAnalyzingImage && <span className="text-[10px] font-black text-pink-400 animate-pulse mt-2 uppercase tracking-widest">Scanning Texture...</span>}
+                {isAnalyzingImage && <span className="text-[10px] font-black text-cyan-400 animate-pulse mt-2 uppercase tracking-widest">Scanning Texture...</span>}
               </div>
 
               {/* Diagnostic report output */}
               <div className="sm:col-span-4 flex flex-col justify-between">
                 {analysisResult ? (
                   <div className="bg-slate-950 p-4 rounded-2xl border border-white/5 space-y-2 text-xs text-slate-400">
-                    <h4 className="text-[9px] font-black uppercase text-pink-450 tracking-wider">AI Vision Diagnosis Report</h4>
+                    <h4 className="text-[9px] font-black uppercase text-cyan-400 tracking-wider">AI Vision Diagnosis Report</h4>
                     <div>🔍 Problem: <span className="font-bold text-white">{analysisResult.detectedProblem}</span></div>
-                    <div>🛠️ Trade Match: <span className="font-bold text-pink-400">{analysisResult.recommendedService}</span></div>
+                    <div>🛠️ Trade Match: <span className="font-bold text-cyan-400">{analysisResult.recommendedService}</span></div>
                     <div>📐 Estimated Size: <span className="font-bold text-white">{analysisResult.estimatedArea}</span></div>
                     <div>🧱 Materials Needed: <span className="font-bold text-white">{analysisResult.materials.join(', ')}</span></div>
                     
-                    {/* Cost estimates breakdown */}
                     <div className="pt-2 border-t border-white/5 mt-2 space-y-1">
                       <div className="flex justify-between">
                         <span>Labor Charge:</span>
@@ -486,7 +476,7 @@ export const CustomerView: React.FC = () => {
                         <span>Materials Cost:</span>
                         <span className="font-bold text-slate-200">₹{analysisResult.materialCost}</span>
                       </div>
-                      <div className="flex justify-between text-pink-455 font-extrabold">
+                      <div className="flex justify-between text-cyan-400 font-extrabold">
                         <span>Estimated total:</span>
                         <span>₹{analysisResult.laborCharge + analysisResult.materialCost}</span>
                       </div>
@@ -501,7 +491,7 @@ export const CustomerView: React.FC = () => {
                         setActiveCategoryFilter(analysisResult.recommendedService);
                         setIsVisionOpen(false);
                       }}
-                      className="w-full mt-3 rounded-xl btn-pink-gradient py-2 text-[10px] uppercase font-black tracking-wider flex items-center justify-center gap-1"
+                      className="w-full mt-3 rounded-xl btn-cyan-gradient py-2 text-[10px] uppercase font-black tracking-wider flex items-center justify-center gap-1"
                     >
                       <Zap className="h-3 w-3" />
                       <span>Book Matched Professionals</span>
@@ -519,39 +509,39 @@ export const CustomerView: React.FC = () => {
 
         {/* 2. AI Personalized Dashboard Panel */}
         <section className="rounded-3xl border border-white/5 bg-slate-900/60 p-5 shadow-xl backdrop-blur-xl space-y-4">
-          <div className="flex items-center gap-2 text-pink-400">
-            <Brain className="h-5 w-5 text-pink-500 animate-pulse shrink-0" />
+          <div className="flex items-center gap-2 text-cyan-400">
+            <Brain className="h-5 w-5 text-cyan-400 animate-pulse shrink-0" />
             <h3 className="text-xs font-black uppercase text-white tracking-widest">AI Personalized Hub</h3>
           </div>
           <div className="grid sm:grid-cols-3 gap-4 text-xs">
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 flex flex-col justify-between">
               <div>
-                <span className="text-[9px] font-black uppercase text-slate-555 block tracking-wider mb-1.5">Personalized Recommendations</span>
-                <p className="text-slate-400 text-[11px] leading-relaxed">
+                <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider mb-1.5">Personalized Recommendations</span>
+                <p className="text-slate-350 text-[11px] leading-relaxed">
                   Welcome back! Based on your booking history (Painter, Electrician), we recommend **Suresh Ramachandran** (Painter, 200 m away) for quick maintenance touch-ups.
                 </p>
               </div>
-              <button onClick={() => { setActiveCategoryFilter('Painter'); setSelectedPartner(partners[0]); }} className="mt-3 text-[10px] text-pink-400 font-extrabold uppercase hover:underline text-left">View Suresh's Profile →</button>
+              <button onClick={() => { setActiveCategoryFilter('Painter'); setSelectedPartner(partners[0]); }} className="mt-3 text-[10px] text-cyan-455 font-extrabold uppercase hover:underline text-left">View Suresh's Profile →</button>
             </div>
 
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 flex flex-col justify-between">
               <div>
-                <span className="text-[9px] font-black uppercase text-slate-555 block tracking-wider mb-1.5">Seasonal Weather Picks</span>
-                <p className="text-slate-400 text-[11px] leading-relaxed">
+                <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider mb-1.5">Seasonal Weather Picks</span>
+                <p className="text-slate-350 text-[11px] leading-relaxed">
                   Monsoon conditions are forming over Adyar. Prioritize scheduling house waterproofing with Suresh or backup power wiring installations with Rajesh.
                 </p>
               </div>
-              <button onClick={() => setActiveCategoryFilter('Electrician')} className="mt-3 text-[10px] text-pink-400 font-extrabold uppercase hover:underline text-left">Find Electricians →</button>
+              <button onClick={() => setActiveCategoryFilter('Electrician')} className="mt-3 text-[10px] text-cyan-455 font-extrabold uppercase hover:underline text-left">Find Electricians →</button>
             </div>
 
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 flex flex-col justify-between">
               <div>
-                <span className="text-[9px] font-black uppercase text-slate-555 block tracking-wider mb-1.5">Nearby Smart Offers</span>
-                <p className="text-slate-400 text-[11px] leading-relaxed">
+                <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider mb-1.5">Nearby Smart Offers</span>
+                <p className="text-slate-350 text-[11px] leading-relaxed">
                   Consultation charges are reduced by **₹199** for plumbers within Adyar sectors. Apply coupon **FREEVISIT** to claim.
                 </p>
               </div>
-              <span className="mt-3 inline-block bg-pink-500/10 border border-pink-500/20 text-pink-400 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider w-max">Claim Discount</span>
+              <span className="mt-3 inline-block bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider w-max">Claim Discount</span>
             </div>
           </div>
         </section>
@@ -561,8 +551,8 @@ export const CustomerView: React.FC = () => {
           <div className="rounded-3xl border border-white/5 bg-slate-900/50 p-4 shadow-xl backdrop-blur-xl">
             <div className="flex justify-between items-center mb-3">
               <div>
-                <h3 className="text-xs font-black uppercase text-pink-400 tracking-wider flex items-center gap-2">
-                  <Navigation className="h-4 w-4 text-pink-400 animate-pulse shrink-0" />
+                <h3 className="text-xs font-black uppercase text-cyan-400 tracking-wider flex items-center gap-2">
+                  <Navigation className="h-4 w-4 text-cyan-450 animate-pulse shrink-0" />
                   <span>Real-time GPS Tracking</span>
                 </h3>
                 <p className="text-[10px] text-slate-400">Your assigned partner is navigating to your address.</p>
@@ -574,7 +564,7 @@ export const CustomerView: React.FC = () => {
                     onClick={() => setActiveTrackingId(b.id)}
                     className={`px-3 py-1.5 rounded-xl text-[10px] font-black transition-all uppercase ${
                       activeTrackingId === b.id 
-                        ? 'btn-pink-gradient' 
+                        ? 'btn-cyan-gradient' 
                         : 'bg-slate-800 text-slate-400'
                     }`}
                   >
@@ -586,19 +576,19 @@ export const CustomerView: React.FC = () => {
             
             {/* Interactive GPS SVG Map */}
             <div className="relative h-64 sm:h-80 w-full rounded-2xl overflow-hidden bg-slate-950 border border-white/5 shadow-inner flex items-center justify-center">
-              <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#EC4899_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
+              <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#00E5FF_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
               <svg className="absolute inset-0 w-full h-full stroke-white/5 stroke-[2] fill-none">
                 <path d="M 0,100 H 1200 M 0,200 H 1200 M 150,0 V 400 M 350,0 V 400 M 600,0 V 400" />
-                <path d="M 50,50 C 150,50 150,150 250,150 S 350,250 400,250 H 600" className="stroke-pink-500/10" />
+                <path d="M 50,50 C 150,50 150,150 250,150 S 350,250 400,250 H 600" className="stroke-cyan-500/10" />
               </svg>
 
               {/* Pin User */}
               <div className="absolute left-[80%] top-[80%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
                 <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
                 </span>
-                <span className="mt-1 bg-pink-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded shadow-lg uppercase">You</span>
+                <span className="mt-1 bg-cyan-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded shadow-lg uppercase">You</span>
               </div>
 
               {/* Vehicle tracking dot */}
@@ -611,11 +601,11 @@ export const CustomerView: React.FC = () => {
                       className="absolute flex flex-col items-center z-10 transition-all duration-1000 ease-linear"
                       style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                     >
-                      <div className="bg-gradient-to-r from-pink-500 to-fuchsia-600 border border-white/20 text-white rounded-xl py-1 px-2.5 shadow-2xl flex items-center gap-1.5">
+                      <div className="bg-gradient-to-r from-cyan-400 to-indigo-500 border border-white/20 text-white rounded-xl py-1 px-2.5 shadow-2xl flex items-center gap-1.5">
                         <span className="text-sm animate-bounce">{activeB.categoryIcon}</span>
                         <span className="text-[8px] font-black tracking-widest uppercase">EN ROUTE</span>
                       </div>
-                      <div className="text-[8px] text-pink-300 bg-slate-900/90 rounded px-1 mt-1 font-bold border border-white/5 shadow">
+                      <div className="text-[8px] text-cyan-300 bg-slate-900/90 rounded px-1 mt-1 font-bold border border-white/5 shadow">
                         ETA {Math.max(1, Math.round((100 - activeB.progress) / 10))} mins
                       </div>
                     </div>
@@ -645,7 +635,7 @@ export const CustomerView: React.FC = () => {
                       onClick={() => setSelectedGroup(g)}
                       className={`rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all ${
                         selectedGroup === g
-                          ? 'btn-pink-gradient'
+                          ? 'btn-cyan-gradient'
                           : 'bg-slate-900 border border-white/5 text-slate-400 hover:text-white'
                       }`}
                     >
@@ -660,10 +650,10 @@ export const CustomerView: React.FC = () => {
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategoryFilter(cat.name)}
-                    className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-900 border border-white/5 shadow-md hover:border-pink-500/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group"
+                    className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-900 border border-white/5 shadow-md hover:border-cyan-400/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group"
                   >
                     <div className="text-3xl transition-transform duration-300 group-hover:scale-115">{cat.icon}</div>
-                    <span className="mt-2.5 text-[10px] font-bold text-slate-300 group-hover:text-pink-400 text-center truncate w-full uppercase tracking-wider">
+                    <span className="mt-2.5 text-[10px] font-bold text-slate-300 group-hover:text-cyan-400 text-center truncate w-full uppercase tracking-wider">
                       {t(`categories.${cat.name}`)}
                     </span>
                   </button>
@@ -676,7 +666,7 @@ export const CustomerView: React.FC = () => {
               <h2 className="text-lg font-black text-white uppercase tracking-wider">{t('popularOffers')}</h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {OFFERS.map(o => (
-                  <div key={o.id} className="rounded-3xl p-6 bg-gradient-to-r from-pink-650 to-rose-800 text-white shadow-xl flex flex-col justify-between relative overflow-hidden border border-white/10 group">
+                  <div key={o.id} className="rounded-3xl p-6 bg-gradient-to-r from-cyan-600 to-indigo-800 text-white shadow-xl flex flex-col justify-between relative overflow-hidden border border-white/10 group">
                     <div className="absolute right-0 bottom-0 opacity-10 text-9xl font-extrabold -mr-6 -mb-6 transition-transform group-hover:scale-110">%</div>
                     <div>
                       <h3 className="text-lg font-black tracking-tight">{o.title}</h3>
@@ -709,12 +699,12 @@ export const CustomerView: React.FC = () => {
                     setActiveCategoryFilter(null);
                     setPartnerSearch('');
                   }}
-                  className="p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-pink-500/40 text-slate-300"
+                  className="p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-cyan-400/40 text-slate-350"
                 >
                   ← Back
                 </button>
                 <div>
-                  <span className="text-[10px] font-black uppercase text-pink-400 tracking-wider">Services Directory</span>
+                  <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider">Services Directory</span>
                   <h2 className="text-2xl font-black text-white uppercase">{t(`categories.${activeCategoryFilter}`)} Providers</h2>
                 </div>
               </div>
@@ -733,24 +723,24 @@ export const CustomerView: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-1.5 bg-slate-900 border border-white/5 px-3 py-1.5 rounded-xl text-xs text-slate-350">
-                  <SlidersHorizontal className="h-3.5 w-3.5 text-pink-400" />
+                  <SlidersHorizontal className="h-3.5 w-3.5 text-cyan-400" />
                   <button 
                     onClick={() => setFilterAvailableOnly(!filterAvailableOnly)}
-                    className={`font-bold uppercase text-[9px] tracking-wider ${filterAvailableOnly ? 'text-pink-400' : 'text-slate-500'}`}
+                    className={`font-bold uppercase text-[9px] tracking-wider ${filterAvailableOnly ? 'text-cyan-450' : 'text-slate-500'}`}
                   >
                     Online
                   </button>
                   <span className="text-white/10">|</span>
                   <button 
                     onClick={() => setFilterEmergencyOnly(!filterEmergencyOnly)}
-                    className={`font-bold uppercase text-[9px] tracking-wider ${filterEmergencyOnly ? 'text-pink-400' : 'text-slate-500'}`}
+                    className={`font-bold uppercase text-[9px] tracking-wider ${filterEmergencyOnly ? 'text-cyan-455' : 'text-slate-500'}`}
                   >
                     Emergency
                   </button>
                   <span className="text-white/10">|</span>
                   <button 
                     onClick={() => setFilterDoorstepOnly(!filterDoorstepOnly)}
-                    className={`font-bold uppercase text-[9px] tracking-wider ${filterDoorstepOnly ? 'text-pink-400' : 'text-slate-500'}`}
+                    className={`font-bold uppercase text-[9px] tracking-wider ${filterDoorstepOnly ? 'text-cyan-455' : 'text-slate-500'}`}
                   >
                     Doorstep
                   </button>
@@ -758,17 +748,17 @@ export const CustomerView: React.FC = () => {
 
                 {/* Customer Recommendation Sorting selections */}
                 <div className="flex items-center gap-1.5 bg-slate-900 border border-white/5 px-3 py-1.5 rounded-xl text-xs text-slate-300">
-                  <ArrowUpDown className="h-3.5 w-3.5 text-pink-400 shrink-0" />
+                  <ArrowUpDown className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
                   <span className="text-[10px] font-bold text-slate-500 uppercase">Sort by:</span>
                   <select 
                     value={sortBy} 
                     onChange={e => setSortBy(e.target.value as any)}
-                    className="bg-transparent outline-none text-[10px] font-black uppercase text-pink-400 cursor-pointer"
+                    className="bg-transparent outline-none text-[10px] font-black uppercase text-cyan-400 cursor-pointer"
                   >
-                    <option value="rating" className="bg-slate-950">Highest Rating ⭐</option>
-                    <option value="distance" className="bg-slate-950">Nearest Distance 📍</option>
-                    <option value="cancellationRate" className="bg-slate-950">Lowest Cancellation Rate 📉</option>
-                    <option value="popularity" className="bg-slate-950">Highest Popularity 🌟</option>
+                    <option value="rating" className="bg-slate-950 text-white">Highest Rating ⭐</option>
+                    <option value="distance" className="bg-slate-950 text-white">Nearest Distance 📍</option>
+                    <option value="cancellationRate" className="bg-slate-950 text-white">Lowest Cancellation Rate 📉</option>
+                    <option value="popularity" className="bg-slate-950 text-white">Highest Popularity 🌟</option>
                   </select>
                 </div>
               </div>
@@ -791,14 +781,14 @@ export const CustomerView: React.FC = () => {
                       key={partner.id}
                       className={`rounded-3xl bg-slate-900 p-5 flex flex-col justify-between shadow-lg transition-all duration-300 group border relative ${
                         isRecommended 
-                          ? 'border-pink-500/50 shadow-[0_0_15px_rgba(236,72,153,0.15)]' 
-                          : 'border-white/5 hover:border-pink-500/40'
+                          ? 'border-cyan-400/50 shadow-[0_0_15px_rgba(0,229,255,0.15)]' 
+                          : 'border-white/5 hover:border-cyan-400/40'
                       }`}
                     >
                       {/* AI Recommended Badge */}
                       {isRecommended && (
-                        <div className="absolute -top-3 left-6 bg-gradient-to-r from-pink-500 to-fuchsia-600 border border-white/20 text-white rounded-full py-0.5 px-3 shadow-md flex items-center gap-1 z-10 animate-bounce">
-                          <Cpu className="h-3 w-3" />
+                        <div className="absolute -top-3 left-6 bg-gradient-to-r from-cyan-400 to-indigo-500 border border-white/20 text-white rounded-full py-0.5 px-3 shadow-md flex items-center gap-1 z-10 animate-bounce">
+                          <Cpu className="h-3 w-3 text-cyan-200" />
                           <span className="text-[8px] font-black uppercase tracking-widest">AI Recommended</span>
                         </div>
                       )}
@@ -814,8 +804,8 @@ export const CustomerView: React.FC = () => {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
                               <h4 className="text-sm font-extrabold text-white truncate">{partner.name}</h4>
-                              <span className="text-pink-400 flex items-center shrink-0" title={t('verifiedPartner')}>
-                                <ShieldCheck className="h-4.5 w-4.5 fill-pink-500/10 text-pink-500" />
+                              <span className="text-cyan-400 flex items-center shrink-0" title={t('verifiedPartner')}>
+                                <ShieldCheck className="h-4.5 w-4.5 fill-cyan-500/10 text-cyan-455" />
                               </span>
                             </div>
                             <span className="text-[9px] font-bold text-slate-450 block tracking-wider uppercase mt-0.5">{partner.businessName}</span>
@@ -834,7 +824,7 @@ export const CustomerView: React.FC = () => {
                           <div>🔧 {t('completedJobsLabel')}: <span className="text-white font-bold">{partner.completedJobs} Tasks</span></div>
                           <div>🗣️ {t('languagesLabel')}: <span className="text-white font-bold truncate max-w-[80px] inline-block">{partner.languages.join(', ')}</span></div>
                           <div>📍 GPS Dist: <span className="text-white font-bold">{partner.distance}</span></div>
-                          <div>⚡ {t('responseSpeedLabel')}: <span className="text-pink-400 font-bold">{partner.responseTime} mins avg</span></div>
+                          <div>⚡ {t('responseSpeedLabel')}: <span className="text-cyan-400 font-bold">{partner.responseTime} mins avg</span></div>
                           <div>📉 Cancel Rate: <span className="text-white font-bold">{partner.cancellationRate}%</span></div>
                           <div>👥 Repeat Cust: <span className="text-white font-bold">{partner.repeatCustomers}%</span></div>
                           <div>🔥 Popularity: <span className="text-white font-bold">{partner.popularity}/100</span></div>
@@ -844,7 +834,7 @@ export const CustomerView: React.FC = () => {
                         <div className="mt-4 flex justify-between items-center">
                           <div>
                             <span className="text-[9px] text-slate-550 uppercase font-black block tracking-wider">Service Fee</span>
-                            <span className="text-base font-black text-pink-400">₹{partner.price} <span className="text-[10px] font-bold text-slate-500">/visit</span></span>
+                            <span className="text-base font-black text-cyan-400">₹{partner.price} <span className="text-[10px] font-bold text-slate-500">/visit</span></span>
                           </div>
                           <div className="flex flex-col items-end gap-1">
                             <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase ${
@@ -874,7 +864,7 @@ export const CustomerView: React.FC = () => {
                         </button>
                         <button 
                           onClick={() => handleDirectBook(partner)}
-                          className="flex-1 rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black tracking-wide"
+                          className="flex-1 rounded-xl btn-cyan-gradient py-2.5 text-xs uppercase font-black tracking-wide"
                         >
                           {t('bookNow')}
                         </button>
@@ -900,7 +890,7 @@ export const CustomerView: React.FC = () => {
                 setPartnerReviewsOpen(false);
                 setShowDirections(false);
               }}
-              className="absolute right-4 top-4 p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-pink-500/40 text-slate-400"
+              className="absolute right-4 top-4 p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-cyan-400/40 text-slate-400"
             >
               <X className="h-5 w-5" />
             </button>
@@ -910,12 +900,12 @@ export const CustomerView: React.FC = () => {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-lg font-black text-white">{selectedPartner.name}</h3>
-                  <span className="text-pink-400" title={t('verifiedPartner')}>
-                    <ShieldCheck className="h-5 w-5 fill-pink-500/10 text-pink-500" />
+                  <span className="text-cyan-400" title={t('verifiedPartner')}>
+                    <ShieldCheck className="h-5 w-5 fill-cyan-500/10 text-cyan-455" />
                   </span>
                 </div>
                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">{selectedPartner.businessName}</span>
-                <span className="inline-block mt-2 px-2.5 py-1 rounded bg-slate-800 text-[10px] text-pink-400 font-black uppercase tracking-wider">
+                <span className="inline-block mt-2 px-2.5 py-1 rounded bg-slate-800 text-[10px] text-cyan-400 font-black uppercase tracking-wider">
                   {t(`categories.${selectedPartner.category}`)}
                 </span>
               </div>
@@ -948,7 +938,7 @@ export const CustomerView: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-[9px] text-slate-555 font-black uppercase block">{t('responseSpeedLabel')}</span>
-                  <span className="font-extrabold text-pink-450">{selectedPartner.responseTime} mins avg</span>
+                  <span className="font-extrabold text-cyan-400">{selectedPartner.responseTime} mins avg</span>
                 </div>
                 <div>
                   <span className="text-[9px] text-slate-555 font-black uppercase block">Cancellation rate</span>
@@ -965,9 +955,9 @@ export const CustomerView: React.FC = () => {
               </div>
 
               {/* AI Smart Scheduling slot selector */}
-              <div className="p-4 bg-pink-500/5 border border-pink-500/10 rounded-2xl space-y-1.5">
-                <h4 className="text-[10px] font-black uppercase text-pink-450 tracking-wider flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 animate-spin text-pink-500" />
+              <div className="p-4 bg-cyan-500/5 border border-cyan-500/10 rounded-2xl space-y-1.5">
+                <h4 className="text-[10px] font-black uppercase text-cyan-455 tracking-wider flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 animate-spin text-cyan-450" />
                   <span>AI Smart Slot Recommendation</span>
                 </h4>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
@@ -980,7 +970,7 @@ export const CustomerView: React.FC = () => {
 
               {/* Sentiment Summary breakdown */}
               <div className="p-4 bg-slate-950 rounded-2xl border border-white/5 space-y-1.5">
-                <h4 className="text-[10px] font-black uppercase text-pink-400 tracking-wider">AI Sentiment Review Analysis</h4>
+                <h4 className="text-[10px] font-black uppercase text-cyan-400 tracking-wider">AI Sentiment Review Analysis</h4>
                 <p className="text-[11px] text-slate-300 italic">
                   "AI Review Summary: Customers highly appreciate prompt arrival, professional tools maintenance, and clean surface finishes. 2 Duplicate bot reviews filtered."
                 </p>
@@ -993,13 +983,13 @@ export const CustomerView: React.FC = () => {
               {/* Portfolio Carousel */}
               {selectedPartner.portfolio.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-black uppercase text-pink-400 tracking-wider mb-2">Service Portfolio</h4>
+                  <h4 className="text-xs font-black uppercase text-cyan-400 tracking-wider mb-2">Service Portfolio</h4>
                   <div className="grid grid-cols-3 gap-2">
                     {selectedPartner.portfolio.map((img, idx) => (
                       <img 
                         key={idx} 
                         src={img} 
-                        className="h-20 w-full object-cover rounded-xl border border-white/5 hover:border-pink-500 transition-all cursor-zoom-in" 
+                        className="h-20 w-full object-cover rounded-xl border border-white/5 hover:border-cyan-400 transition-all cursor-zoom-in" 
                       />
                     ))}
                   </div>
@@ -1023,7 +1013,7 @@ export const CustomerView: React.FC = () => {
                   }}
                   className="flex-1 rounded-xl bg-slate-900 border border-white/5 py-2.5 text-xs font-black uppercase text-slate-355 hover:text-white flex items-center justify-center gap-1.5"
                 >
-                  <MessageSquare className="h-4 w-4 text-pink-400" />
+                  <MessageSquare className="h-4 w-4 text-cyan-400" />
                   <span>{t('aiChat')}</span>
                 </button>
                 <button 
@@ -1040,8 +1030,8 @@ export const CustomerView: React.FC = () => {
                 <div className="p-4 bg-slate-950 rounded-2xl border border-white/5 space-y-3">
                   <h4 className="text-[10px] font-black uppercase text-blue-400 tracking-wider">Google Maps Directions</h4>
                   <div className="relative h-32 w-full bg-slate-900 rounded-xl overflow-hidden border border-white/5 flex items-center justify-center text-xs">
-                    <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#EC4899_1.5px,transparent_1.5px)] [background-size:16px_16px]" />
-                    <svg className="absolute inset-0 w-full h-full stroke-pink-500/25 stroke-[2] fill-none">
+                    <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#00E5FF_1.5px,transparent_1.5px)] [background-size:16px_16px]" />
+                    <svg className="absolute inset-0 w-full h-full stroke-cyan-500/25 stroke-[2] fill-none">
                       <path d="M 20,20 L 120,60 H 300" />
                     </svg>
                     <div className="absolute bottom-2 left-2 bg-slate-950/80 px-2 py-1 rounded text-[9px] text-slate-400">
@@ -1055,7 +1045,7 @@ export const CustomerView: React.FC = () => {
               <div className="border-t border-white/5 pt-4">
                 <button 
                   onClick={() => setPartnerReviewsOpen(!partnerReviewsOpen)}
-                  className="w-full flex justify-between items-center text-xs font-bold text-slate-355 hover:text-pink-400"
+                  className="w-full flex justify-between items-center text-xs font-bold text-slate-355 hover:text-cyan-400"
                 >
                   <span>{t('customerReviewsLabel')} ({selectedPartner.reviews.length})</span>
                   <span>{partnerReviewsOpen ? '▼' : '►'}</span>
@@ -1084,7 +1074,7 @@ export const CustomerView: React.FC = () => {
             <div className="mt-6 pt-4 border-t border-white/5">
               <button 
                 onClick={() => handleDirectBook(selectedPartner)}
-                className="w-full rounded-xl btn-pink-gradient py-3 text-xs uppercase font-black tracking-widest"
+                className="w-full rounded-xl btn-cyan-gradient py-3 text-xs uppercase font-black tracking-widest"
               >
                 {t('bookNow')} (₹{selectedPartner.price})
               </button>
@@ -1104,7 +1094,7 @@ export const CustomerView: React.FC = () => {
               >
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-sm font-black uppercase text-pink-400 tracking-wider flex items-center gap-2 mb-6">
+              <h3 className="text-sm font-black uppercase text-cyan-400 tracking-wider flex items-center gap-2 mb-6">
                 <ShoppingBag className="h-5 w-5" />
                 <span>{t('cart')}</span>
               </h3>
@@ -1116,7 +1106,7 @@ export const CustomerView: React.FC = () => {
                   cart.map(item => (
                     <div key={item.id} className="py-3 flex justify-between items-center gap-3">
                       <div>
-                        <span className="text-[9px] font-black uppercase tracking-wider text-pink-400">{t(`categories.${item.category}`)}</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-cyan-400">{t(`categories.${item.category}`)}</span>
                         <h4 className="text-xs font-extrabold text-white">{item.name}</h4>
                         <span className="text-xs font-black text-slate-300 mt-1 block">₹{item.price * item.quantity}</span>
                       </div>
@@ -1136,9 +1126,9 @@ export const CustomerView: React.FC = () => {
                         </button>
                         <button 
                           onClick={() => removeFromCart(item.id)}
-                          className="p-1 rounded text-pink-500 hover:bg-pink-500/10"
+                          className="p-1 rounded text-cyan-500 hover:bg-cyan-500/10"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-red-500" />
                         </button>
                       </div>
                     </div>
@@ -1159,11 +1149,11 @@ export const CustomerView: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-sm font-black mt-2 text-white border-t border-white/5 pt-2">
                   <span>{t('grandTotal')}</span>
-                  <span className="text-pink-400">₹{totalAmount}</span>
+                  <span className="text-cyan-400">₹{totalAmount}</span>
                 </div>
                 <button
                   onClick={() => setIsCheckoutOpen(true)}
-                  className="mt-4 w-full rounded-xl btn-pink-gradient py-3 text-xs uppercase font-black tracking-widest flex items-center justify-center gap-1.5"
+                  className="mt-4 w-full rounded-xl btn-cyan-gradient py-3 text-xs uppercase font-black tracking-widest flex items-center justify-center gap-1.5"
                 >
                   <CreditCard className="h-4 w-4" />
                   <span>{t('secureCheckout')}</span>
@@ -1186,7 +1176,7 @@ export const CustomerView: React.FC = () => {
             </button>
 
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-7 w-7 rounded-lg bg-pink-500 text-white flex items-center justify-center text-xs font-bold font-mono">P</div>
+              <div className="h-7 w-7 rounded-lg bg-cyan-500 text-white flex items-center justify-center text-xs font-bold font-mono">P</div>
               <h3 className="text-xs font-black tracking-widest uppercase text-white">{t('secureCheckout')}</h3>
             </div>
 
@@ -1204,7 +1194,7 @@ export const CustomerView: React.FC = () => {
                       <span>₹{subtotal}</span>
                     </div>
                     {discount > 0 && (
-                      <div className="flex justify-between text-pink-400 font-bold">
+                      <div className="flex justify-between text-cyan-400 font-bold">
                         <span>{t('discountApplied')}</span>
                         <span>-₹{discount}</span>
                       </div>
@@ -1225,8 +1215,8 @@ export const CustomerView: React.FC = () => {
                     type="text"
                     value={couponCode}
                     onChange={e => setCouponCode(e.target.value)}
-                    placeholder="Promo Code (e.g. CAB55)"
-                    className="flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
+                    placeholder="Promo Code (e.g. CAB50)"
+                    className="flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white"
                   />
                   <button type="submit" className="rounded-xl bg-slate-800 px-4 py-2 text-xs text-white hover:bg-slate-700 font-bold uppercase">
                     Apply
@@ -1235,7 +1225,7 @@ export const CustomerView: React.FC = () => {
 
                 <button
                   onClick={() => setCheckoutStep('payment')}
-                  className="w-full rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black tracking-wider"
+                  className="w-full rounded-xl btn-cyan-gradient py-2.5 text-xs uppercase font-black tracking-wider"
                 >
                   Select Payment Option
                 </button>
@@ -1245,7 +1235,7 @@ export const CustomerView: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-455">{t('checkoutGateway')}</label>
                   <label className={`flex justify-between items-center p-3 rounded-2xl border cursor-pointer ${
-                    paymentMethod === 'wallet' ? 'border-pink-500 bg-pink-500/5' : 'border-white/5'
+                    paymentMethod === 'wallet' ? 'border-cyan-400 bg-cyan-400/5' : 'border-white/5'
                   }`}>
                     <div className="flex items-center gap-2">
                       <input type="radio" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} />
@@ -1256,7 +1246,7 @@ export const CustomerView: React.FC = () => {
                     </div>
                   </label>
                   <label className={`flex justify-between items-center p-3 rounded-2xl border cursor-pointer ${
-                    paymentMethod === 'upi' ? 'border-pink-500 bg-pink-500/5' : 'border-white/5'
+                    paymentMethod === 'upi' ? 'border-cyan-400 bg-cyan-400/5' : 'border-white/5'
                   }`}>
                     <div className="flex items-center gap-2">
                       <input type="radio" checked={paymentMethod === 'upi'} onChange={() => setPaymentMethod('upi')} />
@@ -1266,7 +1256,7 @@ export const CustomerView: React.FC = () => {
                     </div>
                   </label>
                   <label className={`flex justify-between items-center p-3 rounded-2xl border cursor-pointer ${
-                    paymentMethod === 'card' ? 'border-pink-500 bg-pink-500/5' : 'border-white/5'
+                    paymentMethod === 'card' ? 'border-cyan-400 bg-cyan-400/5' : 'border-white/5'
                   }`}>
                     <div className="flex items-center gap-2">
                       <input type="radio" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} />
@@ -1278,7 +1268,7 @@ export const CustomerView: React.FC = () => {
                 </div>
                 <div className="border-t border-white/5 pt-4 flex gap-2">
                   <button type="button" onClick={() => setCheckoutStep('details')} className="flex-1 rounded-xl bg-slate-800 text-slate-355 py-2.5 text-xs font-bold hover:bg-slate-700">Back</button>
-                  <button type="submit" className="flex-1 rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black tracking-widest">Pay ₹{totalAmount.toFixed(0)}</button>
+                  <button type="submit" className="flex-1 rounded-xl btn-cyan-gradient py-2.5 text-xs uppercase font-black tracking-widest">Pay ₹{totalAmount.toFixed(0)}</button>
                 </div>
               </form>
             )}
@@ -1296,14 +1286,13 @@ export const CustomerView: React.FC = () => {
                 <img src={activePartnerChat.avatar} className="h-9 w-9 rounded-full object-cover border border-white/5" />
                 <div>
                   <h3 className="text-xs font-extrabold text-white">{activePartnerChat.name}</h3>
-                  <span className="text-[9px] text-pink-400 font-bold uppercase tracking-wider">Live Translation • {t(`categories.${activePartnerChat.category}`)} Pro</span>
+                  <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-wider">Live Translation • {t(`categories.${activePartnerChat.category}`)} Pro</span>
                 </div>
               </div>
               
-              {/* Translation toggle button */}
               <button 
                 onClick={() => setTranslateActive(!translateActive)}
-                className={`p-1.5 rounded-xl border transition-all ${translateActive ? 'bg-pink-500/10 border-pink-500/20 text-pink-450' : 'bg-slate-950 border-white/5 text-slate-500'}`}
+                className={`p-1.5 rounded-xl border transition-all ${translateActive ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400' : 'bg-slate-950 border-white/5 text-slate-500'}`}
                 title="Toggle Real-time Multilingual Translation"
               >
                 <Languages className="h-4 w-4" />
@@ -1313,11 +1302,11 @@ export const CustomerView: React.FC = () => {
             <div className="flex-1 overflow-y-auto space-y-3 p-1 max-h-56">
               {chatLogs.map((chat, idx) => (
                 <div key={idx} className={`flex flex-col ${chat.sender === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`p-2.5 rounded-2xl text-[11px] max-w-[85%] ${chat.sender === 'user' ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-tr-none' : 'bg-slate-950 border border-white/5 text-slate-350 rounded-tl-none'}`}>
+                  <div className={`p-2.5 rounded-2xl text-[11px] max-w-[85%] ${chat.sender === 'user' ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white rounded-tr-none' : 'bg-slate-950 border border-white/5 text-slate-300 rounded-tl-none'}`}>
                     {chat.text}
                   </div>
                   {chat.translatedText && (
-                    <span className="text-[8px] text-pink-400 font-bold tracking-wider mt-0.5 px-1 uppercase">
+                    <span className="text-[8px] text-cyan-400 font-bold tracking-wider mt-0.5 px-1 uppercase">
                       {chat.translatedText}
                     </span>
                   )}
@@ -1326,8 +1315,8 @@ export const CustomerView: React.FC = () => {
             </div>
 
             <form onSubmit={handleSendChatMessage} className="flex gap-1.5 mt-3 border-t border-white/5 pt-3">
-              <input type="text" value={chatInputText} onChange={e => setChatInputText(e.target.value)} placeholder="Type Tamil/Hindi/English..." className="flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white" />
-              <button type="submit" className="rounded-xl btn-pink-gradient px-4 py-2 text-xs font-bold uppercase shrink-0">Send</button>
+              <input type="text" value={chatInputText} onChange={e => setChatInputText(e.target.value)} placeholder="Type Tamil/Hindi/English..." className="flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-cyan-400 text-white" />
+              <button type="submit" className="rounded-xl btn-cyan-gradient px-4 py-2 text-xs font-bold uppercase shrink-0">Send</button>
             </form>
           </div>
         </div>
