@@ -98,16 +98,17 @@ export const AIChatbot: React.FC = () => {
   const parseIntent = (text: string) => {
     const query = text.toLowerCase();
     
+    // 1. Painter
     if (query.includes('painter') || query.includes('painting') || query.includes('நிறம்') || query.includes('रंग')) {
       return {
-        reply: "I found a top-rated Painter, Suresh Ramachandran (8 Yrs Exp), nearby in Velachery. Booking consultation charge is ₹350. Confirm now?",
+        reply: "I found our top-rated Painter, Suresh Ramachandran (8 Yrs Exp, 94% repeat clients), nearby in Velachery. Estimated consultation visit charge is ₹350. Confirm now?",
         actions: [
           {
-            label: "Book Painter 🏠",
+            label: "Book Painter 🎨",
             onClick: () => {
               const bId = addBooking({
                 category: 'Painter',
-                categoryIcon: '🏠',
+                categoryIcon: '🎨',
                 title: 'Domestic Wall Painting',
                 providerName: 'Suresh Ramachandran',
                 providerPhone: '+91 98765 11111',
@@ -123,6 +124,113 @@ export const AIChatbot: React.FC = () => {
       };
     }
 
+    // 2. AC not cooling / AC service
+    if (query.includes('ac') || query.includes('cooling') || query.includes('cool') || query.includes('குளிர்ச்சி') || query.includes('ठंडा')) {
+      return {
+        reply: "It looks like your AC filter is blocked or coolant is low. I recommend booking our AC Technician Rajesh Kumar (₹199 service visit charge). Confirm slot?",
+        actions: [
+          {
+            label: "Book AC Repair ❄️",
+            onClick: () => {
+              const bId = addBooking({
+                category: 'AC Service',
+                categoryIcon: '❄️',
+                title: 'AC Condenser Cleaning & Topup',
+                providerName: 'Rajesh Kumar',
+                providerPhone: '+91 98765 22222',
+                price: 199,
+                status: 'accepted'
+              });
+              confetti();
+              addNotification('AC Repair Assigned ❄️', `AC Specialist Rajesh Kumar is starting now. ID: ${bId}`, 'success');
+              setRole('customer');
+            }
+          }
+        ]
+      };
+    }
+
+    // 3. Cheapest Electrician
+    if (query.includes('electrician') || query.includes('cheap') || query.includes('மலிவான') || query.includes('सस्ता')) {
+      if (query.includes('electrician') || query.includes('wire') || query.includes('மின்சார')) {
+        return {
+          reply: "The cheapest electrician nearby is Rajesh Kumar (₹199/visit charge, 1.2 km away). Confirm booking?",
+          actions: [
+            {
+              label: "Book Rajesh (Electrician) ⚡",
+              onClick: () => {
+                const bId = addBooking({
+                  category: 'Electrician',
+                  categoryIcon: '⚡',
+                  title: 'Home Wiring Service',
+                  providerName: 'Rajesh Kumar',
+                  providerPhone: '+91 98765 22222',
+                  price: 199,
+                  status: 'accepted'
+                });
+                confetti();
+                addNotification('Electrician Assigned ⚡', `Rajesh Kumar is dispatched. ID: ${bId}`, 'success');
+                setRole('customer');
+              }
+            }
+          ]
+        };
+      }
+    }
+
+    // 4. Female beautician
+    if (query.includes('beautician') || query.includes('female') || query.includes('பெண்') || query.includes('महिला')) {
+      return {
+        reply: "I found our certified female beautician, Anjali Sharma (6 Yrs Exp, Glow Beauty Studio), located 1.8 km away. Her fee is ₹499/visit. Schedule now?",
+        actions: [
+          {
+            label: "Book Anjali (Beautician) 💇",
+            onClick: () => {
+              const bId = addBooking({
+                category: 'Beautician',
+                categoryIcon: '💇',
+                title: 'Bridal Glow Facial Package',
+                providerName: 'Anjali Sharma',
+                providerPhone: '+91 98765 33333',
+                price: 499,
+                status: 'accepted'
+              });
+              confetti();
+              addNotification('Beautician Booked 💇', `Anjali Sharma is scheduled. ID: ${bId}`, 'success');
+              setRole('customer');
+            }
+          }
+        ]
+      };
+    }
+
+    // 5. Plumber
+    if (query.includes('plumber') || query.includes('leak') || query.includes('குழாய்') || query.includes('नल')) {
+      return {
+        reply: "I found Plumber Rohan Verma (4 Yrs Exp, Tambaram Plumbers). His visit fee is ₹199. Book now?",
+        actions: [
+          {
+            label: "Book Plumber 🚰",
+            onClick: () => {
+              const bId = addBooking({
+                category: 'Plumber',
+                categoryIcon: '🚰',
+                title: 'Emergency Leakage Repair',
+                providerName: 'Rohan Verma',
+                providerPhone: '+91 98765 44444',
+                price: 199,
+                status: 'accepted'
+              });
+              confetti();
+              addNotification('Plumber Assigned 🚰', `Rohan Verma is dispatched. ID: ${bId}`, 'success');
+              setRole('customer');
+            }
+          }
+        ]
+      };
+    }
+
+    // 6. Food Delivery / Pizza
     if (query.includes('pizza') || query.includes('food') || query.includes('உணவு') || query.includes('खाना')) {
       return {
         reply: "Would you like to order our customer favorite 'Cheese Loaded Pizza' from Saravana Bhavan (₹299)?",
@@ -144,9 +252,10 @@ export const AIChatbot: React.FC = () => {
       };
     }
 
-    if (query.includes('admin') || query.includes('dashboard')) {
+    // 7. General Admin Command
+    if (query.includes('admin') || query.includes('dashboard') || query.includes('fraud') || query.includes('security')) {
       return {
-        reply: "Rerouting you to the **Super Admin Console**.",
+        reply: "Rerouting you to the **Super Admin Console** to monitor KYC verifications and AI fraud logs.",
         actions: [
           {
             label: "Open Admin Panel 🛡️",
@@ -156,9 +265,10 @@ export const AIChatbot: React.FC = () => {
       };
     }
 
-    if (query.includes('partner') || query.includes('register') || query.includes('work')) {
+    // 8. General Partner Command
+    if (query.includes('partner') || query.includes('register') || query.includes('work') || query.includes('merchant')) {
       return {
-        reply: "Opening the **Partner Application Portal** where you can onboard or check jobs.",
+        reply: "Opening the **Partner Application Portal** to review earnings predictions, pricing suggestions, and onboarding registers.",
         actions: [
           {
             label: "Open Partner Portal 💼",
@@ -169,7 +279,7 @@ export const AIChatbot: React.FC = () => {
     }
 
     return {
-      reply: "I am AllCounter AI. Try asking: 'book a painter', 'order pizza', or 'open partner portal'!"
+      reply: "I am the AllRounder AI Assistant. Try asking: 'I need a painter tomorrow morning', 'My AC is not cooling', 'Find the cheapest electrician near me', or 'Find a female beautician'!"
     };
   };
 

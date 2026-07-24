@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { useApp, Partner, CartItem } from '../context/AppContext';
+import React, { useState, useEffect } from 'react';
+import { useApp, Partner, CartItem, ImageAnalysisResult } from '../context/AppContext';
 import { useTranslation } from 'react-i18next';
 import { 
   Search, Star, MapPin, Tag, ShoppingBag, 
   Trash2, CreditCard, X, Navigation, Compass,
   SlidersHorizontal, ArrowUpDown, ShieldCheck, Phone, 
-  MessageSquare, ExternalLink, Calendar, Clock, Sparkles, AlertOctagon, HelpCircle
+  MessageSquare, ExternalLink, Calendar, Clock, Sparkles, AlertOctagon, HelpCircle,
+  Camera, Zap, AlertTriangle, Languages, Brain, ShieldAlert, Cpu
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -65,12 +66,20 @@ const OFFERS = [
   { id: 'o-2', title: '₹199 Off Diagnostic Visit', code: 'FREEVISIT', desc: 'No service charge on plumber/painter consultation visits.', bg: 'from-fuchsia-600 to-pink-600' }
 ];
 
+const MOCK_SCAN_PHOTOS = [
+  { name: 'Cracked Wall (Paint Damage)', file: 'wall_crack.jpg', url: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=200&auto=format&fit=crop' },
+  { name: 'Water Dripping (Leaky Pipe)', file: 'water_leak.jpg', url: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=200&auto=format&fit=crop' },
+  { name: 'Broken Chair (Wooden fracture)', file: 'chair_wood.jpg', url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=200&auto=format&fit=crop' },
+  { name: 'Dusty AC Unit (Filter issue)', file: 'ac_condenser.jpg', url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=200&auto=format&fit=crop' }
+];
+
 export const CustomerView: React.FC = () => {
   const {
     cart, addToCart, removeFromCart, updateCartQuantity,
     clearCart, walletBalance, deductWalletMoney, addBooking, bookings,
     activeTrackingId, setActiveTrackingId, partners, searchQuery, setSearchQuery,
-    addNotification, updateBookingStatus, locationCoords
+    addNotification, updateBookingStatus, locationCoords, bookingHistory,
+    isAnalyzingImage, analysisResult, setAnalysisResult, analyzeImageFile
   } = useApp();
 
   const { t } = useTranslation();
@@ -84,12 +93,20 @@ export const CustomerView: React.FC = () => {
   const [filterAvailableOnly, setFilterAvailableOnly] = useState(false);
   const [filterEmergencyOnly, setFilterEmergencyOnly] = useState(false);
   const [filterDoorstepOnly, setFilterDoorstepOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'experience' | 'completedJobs' | 'availability' | 'responseTime'>('rating');
+  const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'experience' | 'completedJobs' | 'cancellationRate' | 'popularity'>('rating');
+
+  // AI Diagnostic camera tool open state
+  const [isVisionOpen, setIsVisionOpen] = useState(false);
+  const [scanningPhoto, setScanningPhoto] = useState<string | null>(null);
+  const [laserActive, setLaserActive] = useState(false);
 
   // Partner Detail Modal
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [partnerReviewsOpen, setPartnerReviewsOpen] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
+
+  // AI Translation setup in Chat
+  const [translateActive, setTranslateActive] = useState(true);
 
   // Cart & Checkout Drawers
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -102,15 +119,60 @@ export const CustomerView: React.FC = () => {
   // Support Chat Simulation
   const [activePartnerChat, setActivePartnerChat] = useState<Partner | null>(null);
   const [chatInputText, setChatInputText] = useState('');
-  const [chatLogs, setChatLogs] = useState<{ sender: 'user' | 'partner', text: string }[]>([]);
+  const [chatLogs, setChatLogs] = useState<{ sender: 'user' | 'partner', text: string, translatedText?: string }[]>([]);
 
-  // Filter categories
+  // 1. Natural Language Search parsing
+  const isSearchEmergency = /gas|fire|electrician fire|ambulance|smoke|short circuit|water block|leakage/i.test(searchQuery);
+  const isSearchCheap = /cheap|budget|affordable|low price|lowest/i.test(searchQuery);
+  const isSearchBest = /best|top|highly rated|famous|verified/i.test(searchQuery);
+  const isSearchNearest = /nearest|near me|closest|gps/i.test(searchQuery);
+
+  // Auto trigger notifications for emergency detection
+  useEffect(() => {
+    if (isSearchEmergency && searchQuery.length > 3) {
+      addNotification(
+        '🚨 AI EMERGENCY DETECTION',
+        'Prioritizing verified 24/7 emergency dispatch technicians near you.',
+        'warning'
+      );
+    }
+  }, [searchQuery, isSearchEmergency]);
+
+  // Categories mapping
   const groups = ['All', 'Core', 'Handyman', 'Health', 'Travel', 'Lifestyle', 'Entertainment', 'Professional'];
   const filteredCategories = CATEGORIES_DATA.filter(cat => {
     const matchesGroup = selectedGroup === 'All' || cat.group === selectedGroup;
     const matchesSearch = cat.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesGroup && matchesSearch;
+    return matchesGroup || matchesSearch;
   });
+
+  // Calculate recommendation coefficient weights for each partner
+  const getRecommendationScore = (p: Partner): number => {
+    let score = 0;
+    // 1. Rating weight (out of 5, scaling x 10)
+    score += p.rating * 10;
+    // 2. Experience weight
+    score += Math.min(10, parseInt(p.experience) || 0) * 1.5;
+    // 3. Completed jobs
+    score += Math.min(20, (p.completedJobs || 0) / 20);
+    // 4. Distance bonus (closer is better)
+    const dist = parseFloat(p.distance) || 10;
+    score += Math.max(0, 10 - dist) * 2;
+    // 5. Response speed (faster response time gets bonus)
+    score += Math.max(0, 30 - p.responseTime) * 0.5;
+    // 6. Cancellation penalty
+    score -= (p.cancellationRate || 0) * 2;
+    // 7. Repeat Customers
+    score += (p.repeatCustomers || 0) * 0.15;
+    // 8. Popularity
+    score += (p.popularity || 0) * 0.1;
+    // 9. Availability
+    if (p.isOnline) score += 15;
+    // 10. Emergency priority multiplier
+    if (isSearchEmergency && p.emergencyService) score += 100;
+    
+    return Math.round(score);
+  };
 
   // Filter partners matching specific clicked category (must be Admin Approved!)
   const categoryPartners = partners
@@ -129,24 +191,32 @@ export const CustomerView: React.FC = () => {
       return matchesSearch && matchesAvailable && matchesEmergency && matchesDoorstep;
     })
     .sort((a, b) => {
+      // Dynamic priority if searching by specific keyword intent
+      if (isSearchEmergency) {
+        if (a.emergencyService !== b.emergencyService) return a.emergencyService ? -1 : 1;
+      }
+      if (isSearchCheap) {
+        return a.price - b.price;
+      }
+      if (isSearchBest) {
+        return b.rating - a.rating;
+      }
+      if (isSearchNearest) {
+        const distA = parseFloat(a.distance) || 99;
+        const distB = parseFloat(b.distance) || 99;
+        return distA - distB;
+      }
+
+      // Default sorters
       if (sortBy === 'rating') return b.rating - a.rating;
       if (sortBy === 'distance') {
         const distA = parseFloat(a.distance) || 99;
         const distB = parseFloat(b.distance) || 99;
         return distA - distB;
       }
-      if (sortBy === 'experience') {
-        const expA = parseInt(a.experience) || 0;
-        const expB = parseInt(b.experience) || 0;
-        return expB - expA;
-      }
-      if (sortBy === 'completedJobs') return b.completedJobs - a.completedJobs;
-      if (sortBy === 'availability') {
-        if (a.isOnline === b.isOnline) return 0;
-        return a.isOnline ? -1 : 1;
-      }
-      if (sortBy === 'responseTime') return a.responseTime - b.responseTime;
-      return 0;
+      if (sortBy === 'cancellationRate') return a.cancellationRate - b.cancellationRate;
+      if (sortBy === 'popularity') return b.popularity - a.popularity;
+      return getRecommendationScore(b) - getRecommendationScore(a);
     });
 
   // Calculations
@@ -226,27 +296,56 @@ export const CustomerView: React.FC = () => {
     setIsCartOpen(true);
   };
 
-  // Chat submit mock
+  // Chat submit mock with RTL auto-translation
   const handleSendChatMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInputText.trim()) return;
 
-    setChatLogs(prev => [...prev, { sender: 'user', text: chatInputText }]);
+    const userText = chatInputText;
     setChatInputText('');
+
+    let transText = undefined;
+    if (translateActive) {
+      // Simulating user typing in Tamil/Hindi, converting to English for partner
+      if (/[அ-ஹ]/.test(userText)) {
+        transText = `[AI Translated to English]: I want to confirm my schedule.`;
+      } else {
+        transText = `[AI Translated to Hindi]: मैं अपना समय बदलना चाहता हूँ।`;
+      }
+    }
+
+    setChatLogs(prev => [...prev, { sender: 'user', text: userText, translatedText: transText }]);
 
     setTimeout(() => {
       const replies = [
-        "I am looking at your booking details.",
-        "Sure, I will reach in 10 minutes.",
-        "Could you please share your block number?"
+        { orig: "मैं 10 मिनट में वहाँ पहुँच रहा हूँ।", trans: "I am reaching there in 10 minutes." },
+        { orig: "வண்டி எண் எனக்குப் பகிரவும்.", trans: "Please share the vehicle/block number." },
+        { orig: "I am on my way.", trans: "நான் கிளம்பிவிட்டேன்." }
       ];
-      setChatLogs(prev => [...prev, { sender: 'partner', text: replies[Math.floor(Math.random() * replies.length)] }]);
+      const pick = replies[Math.floor(Math.random() * replies.length)];
+      setChatLogs(prev => [
+        ...prev, 
+        { 
+          sender: 'partner', 
+          text: pick.orig, 
+          translatedText: translateActive ? `[AI Translated]: ${pick.trans}` : undefined 
+        }
+      ]);
     }, 1500);
   };
 
   const handleOpenChat = (p: Partner) => {
     setActivePartnerChat(p);
     setChatLogs([{ sender: 'partner', text: `Hello! I am your ${t(`categories.${p.category}`)} provider ${p.name}. How can I help you today?` }]);
+  };
+
+  // Simulate photo uploader selection
+  const handleChooseSamplePhoto = async (photo: typeof MOCK_SCAN_PHOTOS[0]) => {
+    setScanningPhoto(photo.url);
+    setLaserActive(true);
+    // Trigger Context simulation
+    await analyzeImageFile(photo.file);
+    setLaserActive(false);
   };
 
   return (
@@ -256,34 +355,53 @@ export const CustomerView: React.FC = () => {
       <section className="relative overflow-hidden bg-gradient-to-b from-[#0F172A] via-[#1E293B]/70 to-[#0F172A] py-16 px-4 text-center border-b border-white/5">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#EC4899_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
         
-        <div className="relative mx-auto max-w-3xl">
+        <div className="relative mx-auto max-w-3xl space-y-4">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-500/10 px-3 py-1 text-xs font-bold text-pink-400 border border-pink-500/20">
-            🤖 AI-Powered Recommendation Engine Enabled
+            <Cpu className="h-3.5 w-3.5 animate-spin" />
+            🤖 AI-Powered Super Recommendation Engine Enabled
           </span>
-          <h1 className="mt-4 text-4xl sm:text-6xl font-black tracking-tight leading-none text-white">
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-none text-white">
             {t('brand')}. <span className="bg-gradient-to-r from-pink-500 via-fuchsia-400 to-pink-500 bg-clip-text text-transparent">{t('slogan')}</span>
           </h1>
-          <p className="mt-4 text-xs sm:text-base text-slate-400 font-semibold uppercase tracking-wider">
-            Verified Local Partners Onboarded Live
+          <p className="text-xs sm:text-sm text-slate-400 font-semibold uppercase tracking-wider">
+            Verified Local Partners Onboarded Live with Biometrics Audit
           </p>
 
           {/* Search everything bar */}
           <div className="mx-auto mt-8 max-w-xl">
-            <div className="flex items-center rounded-2xl bg-slate-900 border border-white/5 p-2 shadow-2xl focus-within:border-pink-500/50 transition-all">
+            <div className="flex items-center rounded-2xl bg-slate-900 border border-white/5 p-2 shadow-2xl focus-within:border-pink-500/50 transition-all relative">
               <Search className="h-5 w-5 text-slate-500 ml-2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder={t('searchPlaceholder')}
-                className="w-full bg-transparent px-3 py-2 text-xs text-white outline-none"
+                placeholder="Search pro name or ask AI: 'cheap painter near me', 'emergency fire plumber'..."
+                className="w-full bg-transparent px-3 py-2 text-xs text-white outline-none placeholder:text-slate-500"
               />
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="p-2 rounded-xl bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-wider"
-              >
-                Clear
-              </button>
+              <div className="flex items-center gap-1.5 pr-2">
+                <button 
+                  onClick={() => setIsVisionOpen(!isVisionOpen)}
+                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-pink-400 shrink-0 flex items-center justify-center gap-1"
+                  title="AI Vision Camera Scanner"
+                >
+                  <Camera className="h-4 w-4" />
+                  <span className="hidden sm:inline text-[9px] font-black uppercase">Scan Damage</span>
+                </button>
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="p-2 rounded-xl bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-wider"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            {/* Keyword Intents badge highlights */}
+            <div className="mt-2.5 flex items-center justify-center gap-1.5 flex-wrap text-[9px] text-slate-400 uppercase tracking-widest font-black">
+              {isSearchEmergency && <span className="bg-red-500/10 border border-red-500/20 text-red-400 px-2 py-0.5 rounded animate-pulse">🚨 emergency alert prioritized</span>}
+              {isSearchCheap && <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">💰 budget pricing sorted</span>}
+              {isSearchBest && <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded">⭐ high rating sorted</span>}
+              {isSearchNearest && <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 px-2 py-0.5 rounded">📍 nearest distance sorted</span>}
             </div>
           </div>
         </div>
@@ -292,7 +410,153 @@ export const CustomerView: React.FC = () => {
       {/* Main page content container */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-12">
         
-        {/* 2. Map route animation display if active booking is ongoing */}
+        {/* AI Vision Photo Analyzer Drawer Panel */}
+        {isVisionOpen && (
+          <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6 shadow-xl relative overflow-hidden animate-in slide-in-from-top duration-300">
+            <button 
+              onClick={() => {
+                setIsVisionOpen(false);
+                setAnalysisResult(null);
+                setScanningPhoto(null);
+              }}
+              className="absolute right-4 top-4 p-1.5 rounded-xl hover:bg-slate-800 text-slate-400"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-4 text-pink-400">
+              <Brain className="h-5 w-5 animate-pulse text-pink-500" />
+              <h3 className="text-sm font-black uppercase tracking-wider text-white">AI Vision Damage Diagnostician</h3>
+            </div>
+
+            <div className="grid sm:grid-cols-12 gap-6">
+              {/* Photo Selector */}
+              <div className="sm:col-span-5 space-y-4">
+                <span className="text-[10px] font-black uppercase text-slate-500 block mb-2 tracking-wider">Choose Sample Repair Photo</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {MOCK_SCAN_PHOTOS.map(p => (
+                    <button
+                      key={p.name}
+                      onClick={() => handleChooseSamplePhoto(p)}
+                      className="group relative h-24 rounded-2xl overflow-hidden border border-white/5 hover:border-pink-500 transition-all text-left"
+                    >
+                      <img src={p.url} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform" />
+                      <div className="absolute inset-0 bg-slate-950/60 p-2 flex flex-col justify-end">
+                        <span className="text-[9px] font-extrabold text-white leading-tight uppercase">{p.name}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Laser Scanning display */}
+              <div className="sm:col-span-3 flex flex-col items-center justify-center">
+                <div className="relative h-32 w-32 rounded-3xl overflow-hidden bg-slate-950 border border-white/5 shadow-inner flex items-center justify-center">
+                  {scanningPhoto ? (
+                    <>
+                      <img src={scanningPhoto} className="h-full w-full object-cover" />
+                      {laserActive && (
+                        <div className="absolute inset-x-0 h-1.5 bg-gradient-to-r from-transparent via-pink-500 to-transparent shadow-[0_0_8px_#EC4899] animate-bounce top-0" />
+                      )}
+                    </>
+                  ) : (
+                    <Camera className="h-10 w-10 text-slate-700 animate-pulse" />
+                  )}
+                </div>
+                {isAnalyzingImage && <span className="text-[10px] font-black text-pink-400 animate-pulse mt-2 uppercase tracking-widest">Scanning Texture...</span>}
+              </div>
+
+              {/* Diagnostic report output */}
+              <div className="sm:col-span-4 flex flex-col justify-between">
+                {analysisResult ? (
+                  <div className="bg-slate-950 p-4 rounded-2xl border border-white/5 space-y-2 text-xs text-slate-400">
+                    <h4 className="text-[9px] font-black uppercase text-pink-450 tracking-wider">AI Vision Diagnosis Report</h4>
+                    <div>🔍 Problem: <span className="font-bold text-white">{analysisResult.detectedProblem}</span></div>
+                    <div>🛠️ Trade Match: <span className="font-bold text-pink-400">{analysisResult.recommendedService}</span></div>
+                    <div>📐 Estimated Size: <span className="font-bold text-white">{analysisResult.estimatedArea}</span></div>
+                    <div>🧱 Materials Needed: <span className="font-bold text-white">{analysisResult.materials.join(', ')}</span></div>
+                    
+                    {/* Cost estimates breakdown */}
+                    <div className="pt-2 border-t border-white/5 mt-2 space-y-1">
+                      <div className="flex justify-between">
+                        <span>Labor Charge:</span>
+                        <span className="font-bold text-slate-200">₹{analysisResult.laborCharge}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Materials Cost:</span>
+                        <span className="font-bold text-slate-200">₹{analysisResult.materialCost}</span>
+                      </div>
+                      <div className="flex justify-between text-pink-455 font-extrabold">
+                        <span>Estimated total:</span>
+                        <span>₹{analysisResult.laborCharge + analysisResult.materialCost}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px]">
+                        <span>Time Required:</span>
+                        <span className="font-bold text-white">{analysisResult.timeEstimate}</span>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        setActiveCategoryFilter(analysisResult.recommendedService);
+                        setIsVisionOpen(false);
+                      }}
+                      className="w-full mt-3 rounded-xl btn-pink-gradient py-2 text-[10px] uppercase font-black tracking-wider flex items-center justify-center gap-1"
+                    >
+                      <Zap className="h-3 w-3" />
+                      <span>Book Matched Professionals</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-center p-4 border border-dashed border-white/5 rounded-2xl text-[10px] text-slate-500">
+                    Upload or choose a sample photo to run computer vision diagnostic scan
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. AI Personalized Dashboard Panel */}
+        <section className="rounded-3xl border border-white/5 bg-slate-900/60 p-5 shadow-xl backdrop-blur-xl space-y-4">
+          <div className="flex items-center gap-2 text-pink-400">
+            <Brain className="h-5 w-5 text-pink-500 animate-pulse shrink-0" />
+            <h3 className="text-xs font-black uppercase text-white tracking-widest">AI Personalized Hub</h3>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4 text-xs">
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[9px] font-black uppercase text-slate-555 block tracking-wider mb-1.5">Personalized Recommendations</span>
+                <p className="text-slate-400 text-[11px] leading-relaxed">
+                  Welcome back! Based on your booking history (Painter, Electrician), we recommend **Suresh Ramachandran** (Painter, 200 m away) for quick maintenance touch-ups.
+                </p>
+              </div>
+              <button onClick={() => { setActiveCategoryFilter('Painter'); setSelectedPartner(partners[0]); }} className="mt-3 text-[10px] text-pink-400 font-extrabold uppercase hover:underline text-left">View Suresh's Profile →</button>
+            </div>
+
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[9px] font-black uppercase text-slate-555 block tracking-wider mb-1.5">Seasonal Weather Picks</span>
+                <p className="text-slate-400 text-[11px] leading-relaxed">
+                  Monsoon conditions are forming over Adyar. Prioritize scheduling house waterproofing with Suresh or backup power wiring installations with Rajesh.
+                </p>
+              </div>
+              <button onClick={() => setActiveCategoryFilter('Electrician')} className="mt-3 text-[10px] text-pink-400 font-extrabold uppercase hover:underline text-left">Find Electricians →</button>
+            </div>
+
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[9px] font-black uppercase text-slate-555 block tracking-wider mb-1.5">Nearby Smart Offers</span>
+                <p className="text-slate-400 text-[11px] leading-relaxed">
+                  Consultation charges are reduced by **₹199** for plumbers within Adyar sectors. Apply coupon **FREEVISIT** to claim.
+                </p>
+              </div>
+              <span className="mt-3 inline-block bg-pink-500/10 border border-pink-500/20 text-pink-400 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider w-max">Claim Discount</span>
+            </div>
+          </div>
+        </section>
+
+        {/* 3. Map route animation display if active booking is ongoing */}
         {bookings.some(b => b.status === 'ongoing' || b.status === 'accepted') && (
           <div className="rounded-3xl border border-white/5 bg-slate-900/50 p-4 shadow-xl backdrop-blur-xl">
             <div className="flex justify-between items-center mb-3">
@@ -441,7 +705,10 @@ export const CustomerView: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={() => setActiveCategoryFilter(null)}
+                  onClick={() => {
+                    setActiveCategoryFilter(null);
+                    setPartnerSearch('');
+                  }}
                   className="p-2 rounded-xl bg-slate-900 border border-white/5 hover:border-pink-500/40 text-slate-300"
                 >
                   ← Back
@@ -469,21 +736,21 @@ export const CustomerView: React.FC = () => {
                   <SlidersHorizontal className="h-3.5 w-3.5 text-pink-400" />
                   <button 
                     onClick={() => setFilterAvailableOnly(!filterAvailableOnly)}
-                    className={`font-bold uppercase text-[9px] tracking-wider ${filterAvailableOnly ? 'text-pink-400' : 'text-slate-555'}`}
+                    className={`font-bold uppercase text-[9px] tracking-wider ${filterAvailableOnly ? 'text-pink-400' : 'text-slate-500'}`}
                   >
                     Online
                   </button>
                   <span className="text-white/10">|</span>
                   <button 
                     onClick={() => setFilterEmergencyOnly(!filterEmergencyOnly)}
-                    className={`font-bold uppercase text-[9px] tracking-wider ${filterEmergencyOnly ? 'text-pink-400' : 'text-slate-555'}`}
+                    className={`font-bold uppercase text-[9px] tracking-wider ${filterEmergencyOnly ? 'text-pink-400' : 'text-slate-500'}`}
                   >
                     Emergency
                   </button>
                   <span className="text-white/10">|</span>
                   <button 
                     onClick={() => setFilterDoorstepOnly(!filterDoorstepOnly)}
-                    className={`font-bold uppercase text-[9px] tracking-wider ${filterDoorstepOnly ? 'text-pink-400' : 'text-slate-555'}`}
+                    className={`font-bold uppercase text-[9px] tracking-wider ${filterDoorstepOnly ? 'text-pink-400' : 'text-slate-500'}`}
                   >
                     Doorstep
                   </button>
@@ -500,10 +767,8 @@ export const CustomerView: React.FC = () => {
                   >
                     <option value="rating" className="bg-slate-950">Highest Rating ⭐</option>
                     <option value="distance" className="bg-slate-950">Nearest Distance 📍</option>
-                    <option value="experience" className="bg-slate-950">Most Experience 💼</option>
-                    <option value="completedJobs" className="bg-slate-950">Most Completed Jobs 🔧</option>
-                    <option value="availability" className="bg-slate-950">Availability Status ⏱️</option>
-                    <option value="responseTime" className="bg-slate-950">Fast Response Time ⚡</option>
+                    <option value="cancellationRate" className="bg-slate-950">Lowest Cancellation Rate 📉</option>
+                    <option value="popularity" className="bg-slate-950">Highest Popularity 🌟</option>
                   </select>
                 </div>
               </div>
@@ -518,88 +783,106 @@ export const CustomerView: React.FC = () => {
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {categoryPartners.map(partner => (
-                  <div 
-                    key={partner.id}
-                    className="rounded-3xl bg-slate-900 border border-white/5 p-5 flex flex-col justify-between shadow-lg hover:border-pink-500/40 hover:shadow-2xl transition-all duration-300 group"
-                  >
-                    <div>
-                      {/* Top Header Card */}
-                      <div className="flex gap-4">
-                        <img 
-                          src={partner.avatar} 
-                          alt={partner.name} 
-                          className="h-16 w-16 rounded-2xl object-cover border border-white/10 shrink-0 shadow-md"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="text-sm font-extrabold text-white truncate">{partner.name}</h4>
-                            <span className="text-pink-400 flex items-center shrink-0" title={t('verifiedPartner')}>
-                              <ShieldCheck className="h-4.5 w-4.5 fill-pink-500/10 text-pink-500" />
-                            </span>
+                {categoryPartners.map(partner => {
+                  const recommendationScore = getRecommendationScore(partner);
+                  const isRecommended = recommendationScore > 90 || (isSearchEmergency && partner.emergencyService);
+                  return (
+                    <div 
+                      key={partner.id}
+                      className={`rounded-3xl bg-slate-900 p-5 flex flex-col justify-between shadow-lg transition-all duration-300 group border relative ${
+                        isRecommended 
+                          ? 'border-pink-500/50 shadow-[0_0_15px_rgba(236,72,153,0.15)]' 
+                          : 'border-white/5 hover:border-pink-500/40'
+                      }`}
+                    >
+                      {/* AI Recommended Badge */}
+                      {isRecommended && (
+                        <div className="absolute -top-3 left-6 bg-gradient-to-r from-pink-500 to-fuchsia-600 border border-white/20 text-white rounded-full py-0.5 px-3 shadow-md flex items-center gap-1 z-10 animate-bounce">
+                          <Cpu className="h-3 w-3" />
+                          <span className="text-[8px] font-black uppercase tracking-widest">AI Recommended</span>
+                        </div>
+                      )}
+
+                      <div>
+                        {/* Top Header Card */}
+                        <div className="flex gap-4">
+                          <img 
+                            src={partner.avatar} 
+                            alt={partner.name} 
+                            className="h-16 w-16 rounded-2xl object-cover border border-white/10 shrink-0 shadow-md"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="text-sm font-extrabold text-white truncate">{partner.name}</h4>
+                              <span className="text-pink-400 flex items-center shrink-0" title={t('verifiedPartner')}>
+                                <ShieldCheck className="h-4.5 w-4.5 fill-pink-500/10 text-pink-500" />
+                              </span>
+                            </div>
+                            <span className="text-[9px] font-bold text-slate-450 block tracking-wider uppercase mt-0.5">{partner.businessName}</span>
+                            
+                            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-amber-500 font-bold">
+                              <Star className="h-3.5 w-3.5 fill-current shrink-0" />
+                              <span>{partner.rating}</span>
+                              <span className="text-slate-500 font-normal">({partner.reviewsCount} jobs)</span>
+                            </div>
                           </div>
-                          <span className="text-[9px] font-bold text-slate-450 block tracking-wider uppercase mt-0.5">{partner.businessName}</span>
-                          
-                          <div className="flex items-center gap-1.5 mt-1.5 text-xs text-amber-500 font-bold">
-                            <Star className="h-3.5 w-3.5 fill-current shrink-0" />
-                            <span>{partner.rating}</span>
-                            <span className="text-slate-500 font-normal">({partner.reviewsCount} jobs)</span>
+                        </div>
+
+                        {/* Middle attributes */}
+                        <div className="mt-4 grid grid-cols-2 gap-2.5 text-[10px] text-slate-400 border-t border-white/5 pt-4">
+                          <div>💼 {t('experienceLabel')}: <span className="text-white font-bold">{partner.experience} Yrs</span></div>
+                          <div>🔧 {t('completedJobsLabel')}: <span className="text-white font-bold">{partner.completedJobs} Tasks</span></div>
+                          <div>🗣️ {t('languagesLabel')}: <span className="text-white font-bold truncate max-w-[80px] inline-block">{partner.languages.join(', ')}</span></div>
+                          <div>📍 GPS Dist: <span className="text-white font-bold">{partner.distance}</span></div>
+                          <div>⚡ {t('responseSpeedLabel')}: <span className="text-pink-400 font-bold">{partner.responseTime} mins avg</span></div>
+                          <div>📉 Cancel Rate: <span className="text-white font-bold">{partner.cancellationRate}%</span></div>
+                          <div>👥 Repeat Cust: <span className="text-white font-bold">{partner.repeatCustomers}%</span></div>
+                          <div>🔥 Popularity: <span className="text-white font-bold">{partner.popularity}/100</span></div>
+                        </div>
+
+                        {/* Pricing and Available badge */}
+                        <div className="mt-4 flex justify-between items-center">
+                          <div>
+                            <span className="text-[9px] text-slate-550 uppercase font-black block tracking-wider">Service Fee</span>
+                            <span className="text-base font-black text-pink-400">₹{partner.price} <span className="text-[10px] font-bold text-slate-500">/visit</span></span>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase ${
+                              partner.isOnline 
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15' 
+                                : 'bg-slate-800 text-slate-450'
+                            }`}>
+                              {partner.isOnline ? t('availableNow') : t('holidayMode')}
+                            </span>
+                            {partner.emergencyService && (
+                              <span className="text-[8px] font-black bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded animate-pulse uppercase tracking-wider">
+                                🚨 24/7 SOS Support
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
 
-                      {/* Middle attributes */}
-                      <div className="mt-4 grid grid-cols-2 gap-2.5 text-[10px] text-slate-400 border-t border-white/5 pt-4">
-                        <div>💼 {t('experienceLabel')}: <span className="text-white font-bold">{partner.experience} Yrs</span></div>
-                        <div>🔧 {t('completedJobsLabel')}: <span className="text-white font-bold">{partner.completedJobs} Tasks</span></div>
-                        <div>🗣️ {t('languagesLabel')}: <span className="text-white font-bold truncate max-w-[80px] inline-block">{partner.languages.join(', ')}</span></div>
-                        <div>📍 GPS Dist: <span className="text-white font-bold">{partner.distance}</span></div>
-                        <div>⚡ {t('responseSpeedLabel')}: <span className="text-pink-400 font-bold">{partner.responseTime} mins avg</span></div>
-                        <div>🛡️ {t('doorstep')}: <span className="text-white font-bold">{partner.doorstepService ? 'Yes' : 'No'}</span></div>
+                      {/* Bottom Actions */}
+                      <div className="mt-6 flex gap-2 pt-4 border-t border-white/5">
+                        <button 
+                          onClick={() => setSelectedPartner(partner)}
+                          className="flex-1 rounded-xl bg-slate-800 hover:bg-slate-700 py-2.5 text-xs font-black uppercase text-slate-200 border border-white/5 flex items-center justify-center gap-1.5"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          <span>View Profile</span>
+                        </button>
+                        <button 
+                          onClick={() => handleDirectBook(partner)}
+                          className="flex-1 rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black tracking-wide"
+                        >
+                          {t('bookNow')}
+                        </button>
                       </div>
 
-                      {/* Pricing and Available badge */}
-                      <div className="mt-4 flex justify-between items-center">
-                        <div>
-                          <span className="text-[9px] text-slate-550 uppercase font-black block tracking-wider">Service Fee</span>
-                          <span className="text-base font-black text-pink-400">₹{partner.price} <span className="text-[10px] font-bold text-slate-500">/visit</span></span>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase ${
-                            partner.isOnline 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15' 
-                              : 'bg-slate-800 text-slate-450'
-                          }`}>
-                            {partner.isOnline ? t('availableNow') : t('holidayMode')}
-                          </span>
-                          {partner.emergencyService && (
-                            <span className="text-[8px] font-black bg-red-500/10 border border-red-500/20 text-red-400 px-1.5 py-0.5 rounded animate-pulse uppercase tracking-wider">
-                              🚨 24/7 SOS Support
-                            </span>
-                          )}
-                        </div>
-                      </div>
                     </div>
-
-                    {/* Bottom Actions */}
-                    <div className="mt-6 flex gap-2 pt-4 border-t border-white/5">
-                      <button 
-                        onClick={() => setSelectedPartner(partner)}
-                        className="flex-1 rounded-xl bg-slate-800 hover:bg-slate-700 py-2.5 text-xs font-black uppercase text-slate-200 border border-white/5 flex items-center justify-center gap-1.5"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>View Profile</span>
-                      </button>
-                      <button 
-                        onClick={() => handleDirectBook(partner)}
-                        className="flex-1 rounded-xl btn-pink-gradient py-2.5 text-xs uppercase font-black tracking-wide"
-                      >
-                        {t('bookNow')}
-                      </button>
-                    </div>
-
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
@@ -668,12 +951,12 @@ export const CustomerView: React.FC = () => {
                   <span className="font-extrabold text-pink-450">{selectedPartner.responseTime} mins avg</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-555 font-black uppercase block">Emergency SOS</span>
-                  <span className="font-extrabold text-white">{selectedPartner.emergencyService ? 'Yes (24/7)' : 'No'}</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">Cancellation rate</span>
+                  <span className="font-extrabold text-white">{selectedPartner.cancellationRate}%</span>
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-555 font-black uppercase block">{t('doorstep')}</span>
-                  <span className="font-extrabold text-white">{selectedPartner.doorstepService ? 'Supported' : 'No'}</span>
+                  <span className="text-[9px] text-slate-555 font-black uppercase block">Repeat Customers</span>
+                  <span className="font-extrabold text-white">{selectedPartner.repeatCustomers}%</span>
                 </div>
                 <div>
                   <span className="text-[9px] text-slate-555 font-black uppercase block">{t('serviceRadiusLabel')}</span>
@@ -681,20 +964,31 @@ export const CustomerView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Awards/Certificates list */}
-              {selectedPartner.awards.length > 0 && (
-                <div className="p-3 bg-pink-500/5 border border-pink-500/10 rounded-2xl">
-                  <h4 className="text-[10px] font-black uppercase text-pink-400 tracking-wider mb-1 flex items-center gap-1">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>{t('awardsLabel')}</span>
-                  </h4>
-                  <ul className="list-disc list-inside text-[11px] text-slate-300 space-y-1">
-                    {selectedPartner.awards.map((aw, idx) => (
-                      <li key={idx}>{aw}</li>
-                    ))}
-                  </ul>
+              {/* AI Smart Scheduling slot selector */}
+              <div className="p-4 bg-pink-500/5 border border-pink-500/10 rounded-2xl space-y-1.5">
+                <h4 className="text-[10px] font-black uppercase text-pink-450 tracking-wider flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 animate-spin text-pink-500" />
+                  <span>AI Smart Slot Recommendation</span>
+                </h4>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Recommended Time Slot: **Tuesday 10:00 AM**
+                </p>
+                <div className="text-[9px] text-slate-500">
+                  Heuristic inputs: Low traffic forecast, Sunny weather (best for {selectedPartner.category}), and Partner has 100% historical response speed.
                 </div>
-              )}
+              </div>
+
+              {/* Sentiment Summary breakdown */}
+              <div className="p-4 bg-slate-950 rounded-2xl border border-white/5 space-y-1.5">
+                <h4 className="text-[10px] font-black uppercase text-pink-400 tracking-wider">AI Sentiment Review Analysis</h4>
+                <p className="text-[11px] text-slate-300 italic">
+                  "AI Review Summary: Customers highly appreciate prompt arrival, professional tools maintenance, and clean surface finishes. 2 Duplicate bot reviews filtered."
+                </p>
+                <div className="flex justify-between text-[9px] text-slate-500 pt-1">
+                  <span>Sentiment index: 96.4% positive</span>
+                  <span>Fake Reviews Blocked: 2</span>
+                </div>
+              </div>
 
               {/* Portfolio Carousel */}
               {selectedPartner.portfolio.length > 0 && (
@@ -931,7 +1225,7 @@ export const CustomerView: React.FC = () => {
                     type="text"
                     value={couponCode}
                     onChange={e => setCouponCode(e.target.value)}
-                    placeholder="Promo Code (e.g. CAB50)"
+                    placeholder="Promo Code (e.g. CAB55)"
                     className="flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white"
                   />
                   <button type="submit" className="rounded-xl bg-slate-800 px-4 py-2 text-xs text-white hover:bg-slate-700 font-bold uppercase">
@@ -992,27 +1286,47 @@ export const CustomerView: React.FC = () => {
         </div>
       )}
 
-      {/* Chat logs */}
+      {/* Chat logs & translation toggle */}
       {activePartnerChat && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="glass-premium max-w-sm w-full rounded-3xl p-5 shadow-2xl relative border border-white/10 flex flex-col h-96">
+          <div className="glass-premium max-w-sm w-full rounded-3xl p-5 shadow-2xl relative border border-white/10 flex flex-col h-[400px]">
             <button onClick={() => setActivePartnerChat(null)} className="absolute right-4 top-4 p-1.5 rounded-lg hover:bg-slate-800 text-slate-400"><X className="h-5 w-5" /></button>
-            <div className="flex items-center gap-3 border-b border-white/5 pb-3 mb-3">
-              <img src={activePartnerChat.avatar} className="h-9 w-9 rounded-full object-cover border border-white/5" />
-              <div>
-                <h3 className="text-xs font-extrabold text-white">{activePartnerChat.name}</h3>
-                <span className="text-[9px] text-pink-400 font-bold uppercase tracking-wider">Live Chat • {t(`categories.${activePartnerChat.category}`)} Pro</span>
+            <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-3">
+              <div className="flex items-center gap-3">
+                <img src={activePartnerChat.avatar} className="h-9 w-9 rounded-full object-cover border border-white/5" />
+                <div>
+                  <h3 className="text-xs font-extrabold text-white">{activePartnerChat.name}</h3>
+                  <span className="text-[9px] text-pink-400 font-bold uppercase tracking-wider">Live Translation • {t(`categories.${activePartnerChat.category}`)} Pro</span>
+                </div>
               </div>
+              
+              {/* Translation toggle button */}
+              <button 
+                onClick={() => setTranslateActive(!translateActive)}
+                className={`p-1.5 rounded-xl border transition-all ${translateActive ? 'bg-pink-500/10 border-pink-500/20 text-pink-450' : 'bg-slate-950 border-white/5 text-slate-500'}`}
+                title="Toggle Real-time Multilingual Translation"
+              >
+                <Languages className="h-4 w-4" />
+              </button>
             </div>
-            <div className="flex-1 overflow-y-auto space-y-2 p-1 max-h-56">
+
+            <div className="flex-1 overflow-y-auto space-y-3 p-1 max-h-56">
               {chatLogs.map((chat, idx) => (
-                <div key={idx} className={`flex ${chat.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`p-2.5 rounded-2xl text-[11px] max-w-[85%] ${chat.sender === 'user' ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-tr-none' : 'bg-slate-950 border border-white/5 text-slate-300 rounded-tl-none'}`}>{chat.text}</div>
+                <div key={idx} className={`flex flex-col ${chat.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div className={`p-2.5 rounded-2xl text-[11px] max-w-[85%] ${chat.sender === 'user' ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-tr-none' : 'bg-slate-950 border border-white/5 text-slate-350 rounded-tl-none'}`}>
+                    {chat.text}
+                  </div>
+                  {chat.translatedText && (
+                    <span className="text-[8px] text-pink-400 font-bold tracking-wider mt-0.5 px-1 uppercase">
+                      {chat.translatedText}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
+
             <form onSubmit={handleSendChatMessage} className="flex gap-1.5 mt-3 border-t border-white/5 pt-3">
-              <input type="text" value={chatInputText} onChange={e => setChatInputText(e.target.value)} placeholder="Type your message..." className="flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white" />
+              <input type="text" value={chatInputText} onChange={e => setChatInputText(e.target.value)} placeholder="Type Tamil/Hindi/English..." className="flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-pink-500 text-white" />
               <button type="submit" className="rounded-xl btn-pink-gradient px-4 py-2 text-xs font-bold uppercase shrink-0">Send</button>
             </form>
           </div>

@@ -5,7 +5,7 @@ import {
   ShieldCheck, Upload, AlertCircle, FileText, Landmark, Camera,
   User, Check, X, Wallet, ArrowRight, BarChart2, Star,
   Compass, Map, ShieldAlert, Navigation, Activity, MessageSquare, Phone, CheckCircle2,
-  Calendar, Clock, Sliders, PlayCircle, Eye, ArrowUpRight
+  Calendar, Clock, Sliders, PlayCircle, Eye, ArrowUpRight, Brain, AlertTriangle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -653,6 +653,50 @@ export const PartnerView: React.FC = () => {
             <span className="text-[9px] text-slate-450 block mt-4">Based on {activePartner.reviewsCount} jobs</span>
           </div>
 
+        </section>
+
+        {/* AI Business Forecasting & Insights */}
+        <section className="rounded-3xl border border-white/5 bg-slate-900/60 p-5 shadow-xl backdrop-blur-md space-y-4">
+          <div className="flex items-center gap-2 text-pink-400">
+            <Brain className="h-5 w-5 text-pink-500 animate-pulse shrink-0" />
+            <h3 className="text-xs font-black uppercase text-white tracking-widest">AI Merchant Operations forecast</h3>
+          </div>
+          <div className="grid sm:grid-cols-4 gap-4 text-xs">
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 space-y-2">
+              <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider">Estimated Monthly Earnings</span>
+              <div className="text-lg font-black text-white">₹18,400</div>
+              <p className="text-[10px] text-slate-450 leading-relaxed">
+                Projected next month earnings based on monsoon painting/wiring demand projections in Velachery sector.
+              </p>
+            </div>
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 space-y-2">
+              <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider">Suggested service Pricing</span>
+              <div className="text-lg font-black text-pink-400">₹{activePartner.price + 40} <span className="text-[9px] text-slate-500 font-semibold">/visit</span></div>
+              <p className="text-[10px] text-slate-450 leading-relaxed">
+                Suggested base rate adjustments. Market indices are high, and your current rating is {activePartner.rating}/5.
+              </p>
+            </div>
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 space-y-2">
+              <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider">Optimal Dispatch Hours</span>
+              <div className="text-sm font-black text-white flex items-center gap-1">
+                <Clock className="h-4 w-4 text-pink-400" />
+                <span>Tue, 10 AM - 1 PM</span>
+              </div>
+              <p className="text-[10px] text-slate-450 leading-relaxed">
+                Historical bookings matching high speed response ratios and low commuter transit index.
+              </p>
+            </div>
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-white/5 space-y-2">
+              <span className="text-[9px] font-black uppercase text-slate-500 block tracking-wider">Suggestions for profile visibility</span>
+              <div className="text-[10px] font-bold text-white flex items-center gap-1 text-amber-450">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                <span>Upload Certifications</span>
+              </div>
+              <p className="text-[10px] text-slate-450 leading-relaxed">
+                Upload 2 trade certifications to unlock "AI Top Rated Tier" badge matching.
+              </p>
+            </div>
+          </div>
         </section>
 
         {/* 2. Availability sliders & Holiday Mode */}

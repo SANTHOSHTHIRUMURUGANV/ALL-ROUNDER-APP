@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-import { useApp, Partner } from '../context/AppContext';
+import { useApp, Partner, FraudLog } from '../context/AppContext';
 import { useTranslation } from 'react-i18next';
 import { 
   BarChart2, Users, FileText, Check, X, ShieldAlert,
   ArrowUpRight, Sliders, PlayCircle, ShieldCheck, Megaphone,
-  BellRing, Coins, Percent, AlertOctagon, Activity, Eye, UserCheck
+  BellRing, Coins, Percent, AlertOctagon, Activity, Eye, UserCheck,
+  Brain, ShieldCheck as ShieldCheckIcon, AlertTriangle, ShieldX
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const AdminView: React.FC = () => {
   const { 
-    bookings, partners, setPartners, addNotification 
+    bookings, partners, setPartners, addNotification, fraudLogs, setFraudLogs
   } = useApp();
 
   const { t } = useTranslation();
 
   // Active Admin Tabs
-  const [activeTab, setActiveTab] = useState<'verifications' | 'operations' | 'coupons' | 'broadcast'>('verifications');
+  const [activeTab, setActiveTab] = useState<'verifications' | 'operations' | 'coupons' | 'broadcast' | 'fraud'>('verifications');
 
   // Stats calculations
   const totalRevenue = bookings.reduce((sum, b) => sum + b.price, 0);
@@ -29,7 +30,7 @@ export const AdminView: React.FC = () => {
 
   // Coupon states
   const [coupons, setCoupons] = useState([
-    { code: 'CAB50', discount: 15, active: true },
+    { code: 'CAB55', discount: 15, active: true },
     { code: 'FREEVISIT', discount: 20, active: true }
   ]);
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -87,6 +88,12 @@ export const AdminView: React.FC = () => {
     setBroadcastText('');
   };
 
+  // Handle dismiss fraud log
+  const handleDismissFraudLog = (id: string) => {
+    setFraudLogs(prev => prev.filter(l => l.id !== id));
+    addNotification('Security Alert Dismissed 🛡️', `Alert ${id} cleared from logs.`, 'info');
+  };
+
   // List pending partners
   const pendingPartners = partners.filter(p => p.adminStatus === 'pending');
 
@@ -106,23 +113,24 @@ export const AdminView: React.FC = () => {
 
       {/* Navigation tabs */}
       <div className="border-b border-white/5 bg-slate-900/60 sticky top-16 z-30">
-        <div className="mx-auto max-w-7xl flex items-center space-x-1.5 p-3">
+        <div className="mx-auto max-w-7xl flex items-center space-x-1.5 p-3 overflow-x-auto scrollbar-none">
           {[
             { id: 'verifications', label: t('kycQueue'), icon: '📝' },
             { id: 'operations', label: t('operationsLog'), icon: '📊' },
             { id: 'coupons', label: t('couponsCenter'), icon: '🎟' },
-            { id: 'broadcast', label: t('emergencyAlerts'), icon: '📢' }
+            { id: 'broadcast', label: t('emergencyAlerts'), icon: '📢' },
+            { id: 'fraud', label: 'AI Fraud Desk', icon: '🤖' }
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+              className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-300 shrink-0 flex items-center gap-1 ${
                 activeTab === tab.id
                   ? 'btn-pink-gradient text-white shadow-md'
                   : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <span>{tab.icon}</span> <span className="ml-1 hidden sm:inline">{tab.label}</span>
+              <span>{tab.icon}</span> <span>{tab.label}</span>
             </button>
           ))}
         </div>
@@ -138,7 +146,7 @@ export const AdminView: React.FC = () => {
                 <h3 className="text-sm font-black uppercase text-pink-400 tracking-wider">{t('kycQueue')}</h3>
                 <p className="text-[10px] text-slate-550 font-bold">Audit government IDs, biometric selfie matches, and portfolios</p>
               </div>
-              <span className="text-[10px] font-black uppercase text-pink-450 tracking-wider bg-pink-500/10 px-2.5 py-1 rounded-xl">
+              <span className="text-[10px] font-black uppercase text-pink-455 tracking-wider bg-pink-500/10 px-2.5 py-1 rounded-xl">
                 {pendingPartners.length} Profiles Pending
               </span>
             </div>
@@ -247,7 +255,7 @@ export const AdminView: React.FC = () => {
                 <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
                   {partners.filter(p => p.isOnline).length} / {partners.length}
                 </h3>
-                <span className="text-[9px] text-emerald-455 font-bold block mt-2">● Systems operational</span>
+                <span className="text-[9px] text-emerald-450 font-bold block mt-2">● Systems operational</span>
               </div>
             </div>
 
@@ -261,7 +269,7 @@ export const AdminView: React.FC = () => {
                     addNotification('AI Surge Changed 🤖', `Dynamic pricing mode is now ${!aiSurgeActive ? 'Enabled' : 'Disabled'}.`, 'info');
                   }}
                   className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider border ${
-                    aiSurgeActive ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-950 border-white/5 text-slate-500'
+                    aiSurgeActive ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-950 border-white/5 text-slate-555'
                   }`}
                 >
                   {aiSurgeActive ? 'AI Controlled' : 'Manual Override'}
@@ -320,7 +328,7 @@ export const AdminView: React.FC = () => {
                   <div key={index} className="py-3 flex justify-between items-center text-xs">
                     <div>
                       <span className="font-mono font-black text-white bg-slate-950 px-2 py-0.5 rounded mr-2">{c.code}</span>
-                      <span className="text-slate-450 font-semibold">{c.discount}% Booking Discount</span>
+                      <span className="text-slate-455 font-semibold">{c.discount}% Booking Discount</span>
                     </div>
                     <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Active</span>
                   </div>
@@ -366,6 +374,51 @@ export const AdminView: React.FC = () => {
                   <span>{t('transmitAlert')}</span>
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 5: AI Fraud Detection */}
+        {activeTab === 'fraud' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-black uppercase text-pink-400 tracking-wider">AI Security & Fraud Desk</h3>
+                <p className="text-[10px] text-slate-550 font-bold">Biometrics audit, suspicious stripe payments, velocity check controls</p>
+              </div>
+              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider animate-pulse">
+                <ShieldAlert className="h-4 w-4" />
+                <span>Security Engine active</span>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              {fraudLogs.map(log => (
+                <div 
+                  key={log.id} 
+                  className="rounded-3xl bg-slate-900 border border-red-550/30 p-5 shadow-lg flex flex-col justify-between"
+                  style={{ borderColor: 'rgba(239, 68, 68, 0.15)' }}
+                >
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] font-black text-red-450 uppercase bg-red-500/10 px-2 py-0.5 rounded tracking-widest">{log.type}</span>
+                      <span className="text-[9px] text-slate-500">{log.time}</span>
+                    </div>
+                    <h4 className="text-xs font-black text-white">Target: {log.target}</h4>
+                    <p className="text-[10px] text-slate-450 leading-relaxed">{log.reason}</p>
+                    <div className="flex justify-between text-[9px] text-slate-500 pt-1.5 border-t border-white/5">
+                      <span>Risk Index: <span className="text-red-400 font-bold">{log.riskScore}%</span></span>
+                      <span>Action: <span className="font-extrabold uppercase text-red-400">{log.status}</span></span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleDismissFraudLog(log.id)}
+                    className="w-full mt-4 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-400 border border-white/5 transition-colors"
+                  >
+                    Clear Log
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         )}

@@ -71,6 +71,9 @@ export interface Partner {
   serviceRadius: number; // in km
   awards: string[];
   responseTime: number; // in minutes
+  cancellationRate: number; // percentage
+  repeatCustomers: number; // percentage
+  popularity: number; // scale 1-100
 }
 
 export interface PartnerRegistration {
@@ -129,6 +132,26 @@ export interface Notification {
   read: boolean;
 }
 
+export interface FraudLog {
+  id: string;
+  type: string;
+  target: string;
+  riskScore: number;
+  reason: string;
+  time: string;
+  status: 'blocked' | 'monitored';
+}
+
+export interface ImageAnalysisResult {
+  detectedProblem: string;
+  recommendedService: string;
+  estimatedArea: string;
+  materials: string[];
+  laborCharge: number;
+  materialCost: number;
+  timeEstimate: string;
+}
+
 export type ViewRole = 'customer' | 'partner' | 'admin';
 export type Language = 'en' | 'ta' | 'hi' | 'te' | 'kn' | 'ml' | 'ar' | 'fr' | 'de' | 'es' | 'zh' | 'ja';
 
@@ -183,6 +206,14 @@ interface AppContextType {
   partnerReg: PartnerRegistration;
   setPartnerReg: React.Dispatch<React.SetStateAction<PartnerRegistration>>;
   submitPartnerRegistration: () => void;
+  bookingHistory: string[];
+  setBookingHistory: React.Dispatch<React.SetStateAction<string[]>>;
+  fraudLogs: FraudLog[];
+  setFraudLogs: React.Dispatch<React.SetStateAction<FraudLog[]>>;
+  isAnalyzingImage: boolean;
+  analysisResult: ImageAnalysisResult | null;
+  setAnalysisResult: (res: ImageAnalysisResult | null) => void;
+  analyzeImageFile: (fileName: string) => Promise<ImageAnalysisResult>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -240,7 +271,10 @@ const INITIAL_PARTNERS: Partner[] = [
     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     serviceRadius: 15,
     awards: ['Best Wall Finisher 2025', 'AllRounder Rated Top Partner'],
-    responseTime: 5
+    responseTime: 5,
+    cancellationRate: 1,
+    repeatCustomers: 94,
+    popularity: 98
   },
   {
     id: 'p-2',
@@ -276,7 +310,10 @@ const INITIAL_PARTNERS: Partner[] = [
     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     serviceRadius: 10,
     awards: ['Super Electrician Award 2026'],
-    responseTime: 12
+    responseTime: 12,
+    cancellationRate: 2,
+    repeatCustomers: 85,
+    popularity: 90
   },
   {
     id: 'p-3',
@@ -312,7 +349,10 @@ const INITIAL_PARTNERS: Partner[] = [
     workingDays: ['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     serviceRadius: 8,
     awards: ['Glow Master Certificate'],
-    responseTime: 20
+    responseTime: 20,
+    cancellationRate: 1,
+    repeatCustomers: 92,
+    popularity: 94
   },
   {
     id: 'p-pending-1',
@@ -344,7 +384,10 @@ const INITIAL_PARTNERS: Partner[] = [
     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     serviceRadius: 12,
     awards: ['Certified Leakage Expert'],
-    responseTime: 8
+    responseTime: 8,
+    cancellationRate: 4,
+    repeatCustomers: 65,
+    popularity: 70
   }
 ];
 
@@ -412,6 +455,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Onboarding registration state
   const [partnerReg, setPartnerReg] = useState<PartnerRegistration>(INITIAL_REGISTRATION);
+
+  // AI states
+  const [bookingHistory, setBookingHistory] = useState<string[]>(['Painter', 'Electrician']);
+  const [fraudLogs, setFraudLogs] = useState<FraudLog[]>([
+    { id: 'FL-101', type: 'Duplicate Profile Registry', target: 'Karan Malhotra (Painter)', riskScore: 94, reason: 'Aadhaar biometric fingerprint mismatch index with linked bank card.', time: '12 mins ago', status: 'blocked' },
+    { id: 'FL-102', type: 'Velocity Spam Threat', target: 'Client_Vipul89', riskScore: 89, reason: 'Initiated 12 concurrent bookings to mismatched GPS locations in 40 seconds.', time: '3 hrs ago', status: 'blocked' },
+    { id: 'FL-103', type: 'Payment Bypass Pattern', target: 'tx_stripe_823', riskScore: 91, reason: 'Simulated card token scraping identified during Stripe payment challenge.', time: '5 hrs ago', status: 'blocked' }
+  ]);
+
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<ImageAnalysisResult | null>(null);
 
   // Sync dark theme
   useEffect(() => {
@@ -668,6 +722,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTrackingId(bookingId);
     addNotification('Service Order Placed 🚀', `Assigned dispatch matching code: ${bookingId}`, 'booking');
     
+    // Add to personalized booking history for seasonal suggestions
+    setBookingHistory(prev => {
+      const updated = [bookingData.category, ...prev.filter(c => c !== bookingData.category)];
+      return updated.slice(0, 5);
+    });
+
     return bookingId;
   };
 
@@ -745,7 +805,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       workingDays: partnerReg.businessDetails.workingDays,
       serviceRadius: partnerReg.businessDetails.serviceRadius,
       awards: partnerReg.portfolio.awards.length > 0 ? partnerReg.portfolio.awards : ['AllRounder Partner Registry'],
-      responseTime: 10
+      responseTime: 10,
+      cancellationRate: 1,
+      repeatCustomers: 80,
+      popularity: 85
     };
 
     setPartners(prev => [...prev, newPartnerObj]);
@@ -769,6 +832,92 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const markNotificationsAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  // Image Diagnostics simulation
+  const analyzeImageFile = async (fileName: string): Promise<ImageAnalysisResult> => {
+    setIsAnalyzingImage(true);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        let result: ImageAnalysisResult = {
+          detectedProblem: "General Surface Wear",
+          recommendedService: "Painter",
+          estimatedArea: "100 sq.ft",
+          materials: ["Wall Filler", "Sanding Paper", "Primer Coating"],
+          laborCharge: 950,
+          materialCost: 500,
+          timeEstimate: "3-4 hours"
+        };
+        
+        const lower = fileName.toLowerCase();
+        if (lower.includes("wall") || lower.includes("crack") || lower.includes("paint") || lower.includes("damage")) {
+          result = {
+            detectedProblem: "Interior plaster wall crack with color fading",
+            recommendedService: "Painter",
+            estimatedArea: "120 sq.ft",
+            materials: ["Acrylic Emulsion Paint (Pink)", "Gypsum Wall Putty", "Waterproof Primer"],
+            laborCharge: 1200,
+            materialCost: 800,
+            timeEstimate: "1 day"
+          };
+        } else if (lower.includes("chair") || lower.includes("wood") || lower.includes("table") || lower.includes("furniture") || lower.includes("seat")) {
+          result = {
+            detectedProblem: "Structural leg fracture and laminate peeling",
+            recommendedService: "Carpenter",
+            estimatedArea: "1 Furniture Unit",
+            materials: ["High-strength Wood Glue", "Reinforcement Dowels", "Varnish Coating spray"],
+            laborCharge: 550,
+            materialCost: 120,
+            timeEstimate: "2.5 hours"
+          };
+        } else if (lower.includes("water") || lower.includes("leak") || lower.includes("pipe") || lower.includes("plumb") || lower.includes("drip")) {
+          result = {
+            detectedProblem: "Coroded steel connector threads and seal bypass",
+            recommendedService: "Plumber",
+            estimatedArea: "1 Pipe Outlet Joint",
+            materials: ["Teflon Seal Tape", "Rubber Washer spacer", "PVC Pipe adhesive sealant"],
+            laborCharge: 450,
+            materialCost: 99,
+            timeEstimate: "1.5 hours"
+          };
+        } else if (lower.includes("ac") || lower.includes("cool") || lower.includes("filter") || lower.includes("air")) {
+          result = {
+            detectedProblem: "Blocked carbon air filters causing coil freeze",
+            recommendedService: "AC Service",
+            estimatedArea: "1.5 Ton Split AC indoor unit",
+            materials: ["Coolant gas R32 topup", "Coil sanitizer chemical spray"],
+            laborCharge: 850,
+            materialCost: 450,
+            timeEstimate: "2 hours"
+          };
+        } else if (lower.includes("bike") || lower.includes("motorcycle") || lower.includes("engine") || lower.includes("chain")) {
+          result = {
+            detectedProblem: "Dry drive chain link friction and front disk pad wear",
+            recommendedService: "Mechanic",
+            estimatedArea: "1 Motorcycle drive-train assembly",
+            materials: ["Synthetic Chain Lubricant", "Ceramic Disc Brake Pad set"],
+            laborCharge: 950,
+            materialCost: 550,
+            timeEstimate: "3.5 hours"
+          };
+        } else if (lower.includes("car") || lower.includes("scratch") || lower.includes("bumper") || lower.includes("fender")) {
+          result = {
+            detectedProblem: "Fender bumper cosmetic clear-coat scratch",
+            recommendedService: "Mechanic",
+            estimatedArea: "Left front fender zone",
+            materials: ["Rubbing polishing compound cream", "Matching metallic pink touchup pen"],
+            laborCharge: 2200,
+            materialCost: 1500,
+            timeEstimate: "5 hours"
+          };
+        }
+
+        setAnalysisResult(result);
+        setIsAnalyzingImage(false);
+        addNotification("AI Diagnostics Complete 📸", `Problem identified: ${result.detectedProblem}. Recommending ${result.recommendedService} service.`, "success");
+        resolve(result);
+      }, 2000);
+    });
   };
 
   return (
@@ -814,7 +963,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setVoiceActive,
         partnerReg,
         setPartnerReg,
-        submitPartnerRegistration
+        submitPartnerRegistration,
+        bookingHistory,
+        setBookingHistory,
+        fraudLogs,
+        setFraudLogs,
+        isAnalyzingImage,
+        analysisResult,
+        setAnalysisResult,
+        analyzeImageFile
       }}
     >
       {children}
