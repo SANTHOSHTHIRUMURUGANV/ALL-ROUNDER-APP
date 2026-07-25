@@ -14,10 +14,10 @@ const CATEGORIES_DATA = [
   { id: 'cat-home', name: 'Home', icon: '🏠', group: 'Core' },
   { id: 'cat-food', name: 'Food Delivery', icon: '🍔', group: 'Core' },
   { id: 'cat-grocery', name: 'Grocery', icon: '🛒', group: 'Core' },
-  { id: 'cat-taxi', name: 'Taxi', icon: '🚕', group: 'Core' },
-  { id: 'cat-bike-taxi', name: 'Bike Taxi', icon: '🏍', group: 'Core' },
-  { id: 'cat-courier', name: 'Courier', icon: '📦', group: 'Core' },
-  { id: 'cat-car-rental', name: 'Car Rental', icon: '🚗', group: 'Core' },
+  { id: 'cat-taxi', name: 'Taxi', icon: '🚕', group: 'Travel' },
+  { id: 'cat-bike-taxi', name: 'Bike Taxi', icon: '🏍', group: 'Travel' },
+  { id: 'cat-courier', name: 'Courier', icon: '📦', group: 'Travel' },
+  { id: 'cat-car-rental', name: 'Car Rental', icon: '🚗', group: 'Travel' },
   { id: 'cat-movies', name: 'Movie Tickets', icon: '🎬', group: 'Entertainment' },
   { id: 'cat-flights', name: 'Flights', icon: '✈', group: 'Travel' },
   { id: 'cat-train', name: 'Train', icon: '🚆', group: 'Travel' },
@@ -26,39 +26,39 @@ const CATEGORIES_DATA = [
   { id: 'cat-pharmacy', name: 'Pharmacy', icon: '💊', group: 'Health' },
   { id: 'cat-doctor', name: 'Doctor', icon: '🏥', group: 'Health' },
   { id: 'cat-lab-test', name: 'Lab Test', icon: '🧪', group: 'Health' },
-  { id: 'cat-beauty', name: 'Beauty Parlour', icon: '💇', group: 'Lifestyle' },
-  { id: 'cat-spa', name: 'Spa', icon: '💆', group: 'Lifestyle' },
-  { id: 'cat-gym', name: 'Gym', icon: '💪', group: 'Lifestyle' },
-  { id: 'cat-home-services', name: 'Home Services', icon: '🛠', group: 'Handyman' },
-  { id: 'cat-painter', name: 'Painter', icon: '🎨', group: 'Handyman' },
-  { id: 'cat-carpenter', name: 'Carpenter', icon: '🪚', group: 'Handyman' },
-  { id: 'cat-electrician', name: 'Electrician', icon: '⚡', group: 'Handyman' },
-  { id: 'cat-plumber', name: 'Plumber', icon: '🚰', group: 'Handyman' },
-  { id: 'cat-ac-service', name: 'AC Service', icon: '❄', group: 'Handyman' },
-  { id: 'cat-cleaning', name: 'Cleaning', icon: '🧹', group: 'Handyman' },
-  { id: 'cat-mechanic', name: 'Mechanic', icon: '🔧', group: 'Repairs' },
-  { id: 'cat-cycle-repair', name: 'Cycle Repair', icon: '🚲', group: 'Repairs' },
-  { id: 'cat-electronics', name: 'Electronics Repair', icon: '🖥', group: 'Repairs' },
-  { id: 'cat-mobile', name: 'Mobile Repair', icon: '📱', group: 'Repairs' },
-  { id: 'cat-laptop', name: 'Laptop Repair', icon: '💻', group: 'Repairs' },
-  { id: 'cat-photographer', name: 'Photographer', icon: '📷', group: 'Creative' },
-  { id: 'cat-videographer', name: 'Videographer', icon: '🎥', group: 'Creative' },
-  { id: 'cat-event-planner', name: 'Event Planner', icon: '🎉', group: 'Creative' },
-  { id: 'cat-cake', name: 'Cake Delivery', icon: '🎂', group: 'Core' },
-  { id: 'cat-flower', name: 'Flower Delivery', icon: '🌸', group: 'Core' },
-  { id: 'cat-pet', name: 'Pet Care', icon: '🐶', group: 'Lifestyle' },
-  { id: 'cat-babysitter', name: 'Babysitter', icon: '👶', group: 'Lifestyle' },
-  { id: 'cat-tutor', name: 'Tutor', icon: '📚', group: 'Education' },
+  { id: 'cat-beauty', name: 'Beauty Parlour', icon: '💇', group: 'Health' },
+  { id: 'cat-spa', name: 'Spa', icon: '💆', group: 'Health' },
+  { id: 'cat-gym', name: 'Gym', icon: '💪', group: 'Health' },
+  { id: 'cat-home-services', name: 'Home Services', icon: '🛠', group: 'Core' },
+  { id: 'cat-painter', name: 'Painter', icon: '🎨', group: 'Core' },
+  { id: 'cat-carpenter', name: 'Carpenter', icon: '🪚', group: 'Core' },
+  { id: 'cat-electrician', name: 'Electrician', icon: '⚡', group: 'Core' },
+  { id: 'cat-plumber', name: 'Plumber', icon: '🚰', group: 'Core' },
+  { id: 'cat-ac-service', name: 'AC Service', icon: '❄', group: 'Core' },
+  { id: 'cat-cleaning', name: 'Cleaning', icon: '🧹', group: 'Core' },
+  { id: 'cat-mechanic', name: 'Mechanic', icon: '🔧', group: 'Core' },
+  { id: 'cat-cycle-repair', name: 'Cycle Repair', icon: '🚲', group: 'Core' },
+  { id: 'cat-electronics', name: 'Electronics Repair', icon: '🖥', group: 'Core' },
+  { id: 'cat-mobile', name: 'Mobile Repair', icon: '📱', group: 'Core' },
+  { id: 'cat-laptop', name: 'Laptop Repair', icon: '💻', group: 'Core' },
+  { id: 'cat-photographer', name: 'Photographer', icon: '📷', group: 'Entertainment' },
+  { id: 'cat-videographer', name: 'Videographer', icon: '🎥', group: 'Entertainment' },
+  { id: 'cat-event-planner', name: 'Event Planner', icon: '🎉', group: 'Entertainment' },
+  { id: 'cat-cake', name: 'Cake Delivery', icon: '🎂', group: 'Entertainment' },
+  { id: 'cat-flower', name: 'Flower Delivery', icon: '🌸', group: 'Entertainment' },
+  { id: 'cat-pet', name: 'Pet Care', icon: '🐶', group: 'Health' },
+  { id: 'cat-babysitter', name: 'Babysitter', icon: '👶', group: 'Professional' },
+  { id: 'cat-tutor', name: 'Tutor', icon: '📚', group: 'Professional' },
   { id: 'cat-lawyer', name: 'Lawyer', icon: '⚖', group: 'Professional' },
   { id: 'cat-finance', name: 'Finance', icon: '💰', group: 'Professional' },
   { id: 'cat-insurance', name: 'Insurance', icon: '📄', group: 'Professional' },
   { id: 'cat-real-estate', name: 'Real Estate', icon: '🏢', group: 'Professional' },
-  { id: 'cat-laundry', name: 'Laundry', icon: '👕', group: 'Lifestyle' },
-  { id: 'cat-movers', name: 'Packers & Movers', icon: '🚛', group: 'Travel' },
-  { id: 'cat-water-can', name: 'Water Can', icon: '💧', group: 'Core' },
-  { id: 'cat-fuel', name: 'Fuel Delivery', icon: '⛽', group: 'Core' },
-  { id: 'cat-cook', name: 'Home Cook', icon: '🍳', group: 'Lifestyle' },
-  { id: 'cat-trainer', name: 'Gym Trainer', icon: '🏋️', group: 'Lifestyle' }
+  { id: 'cat-laundry', name: 'Laundry', icon: '👕', group: 'Professional' },
+  { id: 'cat-movers', name: 'Packers & Movers', group: 'Travel', icon: '🚛' },
+  { id: 'cat-water-can', name: 'Water Can', icon: '💧', group: 'Travel' },
+  { id: 'cat-fuel', name: 'Fuel Delivery', icon: '⛽', group: 'Travel' },
+  { id: 'cat-cook', name: 'Home Cook', icon: '🍳', group: 'Health' },
+  { id: 'cat-trainer', name: 'Gym Trainer', icon: '🏋️', group: 'Health' }
 ];
 
 const OFFERS = [
@@ -145,11 +145,11 @@ export const CustomerView: React.FC = () => {
   }, [searchQuery, isSearchEmergency]);
 
   // Categories mapping
-  const groups = ['All', 'Core', 'Handyman', 'Health', 'Travel', 'Lifestyle', 'Entertainment', 'Professional'];
+  const groups = ['All', 'Core', 'Health', 'Travel', 'Entertainment', 'Professional'];
   const filteredCategories = CATEGORIES_DATA.filter(cat => {
     const matchesGroup = selectedGroup === 'All' || cat.group === selectedGroup;
-    const matchesSearch = cat.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesGroup || matchesSearch;
+    const matchesSearch = searchQuery ? cat.name.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+    return matchesGroup && matchesSearch;
   });
 
   // Calculate recommendation coefficient weights for each partner
@@ -633,10 +633,10 @@ export const CustomerView: React.FC = () => {
                     <button
                       key={g}
                       onClick={() => setSelectedGroup(g)}
-                      className={`rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all ${
+                      className={`rounded-xl px-3.5 py-2 text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${
                         selectedGroup === g
-                          ? 'btn-cyan-gradient'
-                          : 'bg-slate-900 border border-white/5 text-slate-400 hover:text-white'
+                          ? 'btn-cyan-gradient shadow-[0_0_15px_rgba(0,229,255,0.45)] border border-cyan-400 text-white'
+                          : 'bg-slate-900 border border-white/5 text-slate-400 hover:text-white hover:bg-slate-800'
                       }`}
                     >
                       {g}
@@ -645,7 +645,10 @@ export const CustomerView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+              <div 
+                key={selectedGroup} 
+                className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300"
+              >
                 {filteredCategories.map(cat => (
                   <button
                     key={cat.id}
