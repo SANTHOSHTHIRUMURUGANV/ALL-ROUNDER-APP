@@ -1,13 +1,14 @@
 import { Booking } from '../models/Booking.js';
 import { Partner } from '../models/Partner.js';
+import mongoose from 'mongoose';
+
+// In-Memory fallback database simulation when offline
+const IN_MEMORY_BOOKINGS = [];
 
 export const createBooking = async (req, res, next) => {
   try {
     const { category, categoryIcon, title, providerName, providerPhone, price } = req.body;
     
-    // Auto find provider model if match
-    const partner = await Partner.findOne({ name: providerName });
-
     const routeCoordinates = [];
     for (let i = 0; i < 10; i++) {
       routeCoordinates.push({
@@ -15,6 +16,37 @@ export const createBooking = async (req, res, next) => {
         y: 50 + Math.cos(i) * 30
       });
     }
+
+    const bookingId = `BK-${Date.now().toString().slice(-6)}`;
+    const newBookingData = {
+      id: bookingId,
+      _id: bookingId,
+      customerId: req.user?._id || 'mock-customer-id',
+      partnerId: 'mock-partner-id',
+      category,
+      categoryIcon,
+      title,
+      providerName: providerName || 'Rajesh Kumar',
+      providerPhone: providerPhone || '+91 98765 22222',
+      price,
+      date: new Date().toLocaleDateString(),
+      time: new Date().toLocaleTimeString().substring(0, 5),
+      status: 'pending',
+      progress: 0,
+      routeCoordinates,
+      currentPosIndex: 0,
+      createdAt: new Date()
+    };
+
+    if (mongoose.connection.readyState !== 1) {
+      IN_MEMORY_BOOKINGS.unshift(newBookingData);
+      if (req.io) {
+        req.io.emit('bookingCreated', newBookingData);
+      }
+      return res.status(201).json(newBookingData);
+    }
+
+    const partner = await Partner.findOne({ name: providerName });
 
     const booking = await Booking.create({
       customerId: req.user._id,
@@ -33,7 +65,6 @@ export const createBooking = async (req, res, next) => {
       currentPosIndex: 0
     });
 
-    // Emit live booking created notification to Socket clients
     if (req.io) {
       req.io.emit('bookingCreated', booking);
     }
@@ -46,6 +77,10 @@ export const createBooking = async (req, res, next) => {
 
 export const getBookings = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json(IN_MEMORY_BOOKINGS);
+    }
+
     let query = {};
     if (req.user.role === 'partner') {
       const partner = await Partner.findOne({ userId: req.user._id });
@@ -68,6 +103,22 @@ export const updateBookingStatus = async (req, res, next) => {
     const { id } = req.params;
     const { status, progress, currentPosIndex } = req.body;
 
+    if (mongoose.connection.readyState !== 1) {
+      const booking = IN_MEMORY_BOOKINGS.find(b => b.id === id || b._id === id);
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking entry not found' });
+      }
+
+      if (status !== undefined) booking.status = status;
+      if (progress !== undefined) booking.progress = progress;
+      if (currentPosIndex !== undefined) booking.currentPosIndex = currentPosIndex;
+
+      if (req.io) {
+        req.io.emit('bookingUpdated', booking);
+      }
+      return res.status(200).json(booking);
+    }
+
     const booking = await Booking.findById(id);
     if (!booking) {
       return res.status(404).json({ message: 'Booking entry not found' });
@@ -79,7 +130,6 @@ export const updateBookingStatus = async (req, res, next) => {
 
     await booking.save();
 
-    // Broadcast update status changes in real-time
     if (req.io) {
       req.io.emit('bookingUpdated', booking);
     }
