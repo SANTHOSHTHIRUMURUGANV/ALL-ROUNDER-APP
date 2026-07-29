@@ -16,7 +16,8 @@
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-i18next": "^17.0.9"
+    "react-i18next": "^17.0.9",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.9.0",

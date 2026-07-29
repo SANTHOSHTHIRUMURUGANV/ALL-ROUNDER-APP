@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import i18n from '../i18n';
+import { io, Socket } from 'socket.io-client';
+import { apiRequest } from '../utils/api';
 
 // Define structures
 export interface CartItem {
@@ -474,6 +476,96 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     document.body.classList.add('dark');
   }, []);
 
+  const socketRef = useRef<Socket | null>(null);
+
+  // Sync with MongoDB backend API
+  useEffect(() => {
+    const syncData = async () => {
+      try {
+        const user = await apiRequest('/auth/me');
+        if (user) {
+          setWalletBalance(user.walletBalance);
+          setRole(user.role);
+          setLocationCoords({ lat: user.location.lat, lng: user.location.lng });
+          setLocationDetails({
+            address: user.location.address,
+            city: user.location.city,
+            district: user.location.district,
+            state: user.location.state,
+            postcode: user.location.postcode,
+            country: user.location.country
+          });
+        }
+        
+        const partnersList = await apiRequest('/partners/nearby');
+        if (partnersList && partnersList.length > 0) {
+          setPartners(partnersList);
+        }
+
+        const bookingsList = await apiRequest('/bookings');
+        if (bookingsList) {
+          setBookings(bookingsList);
+        }
+
+        const fraudList = await apiRequest('/admin/fraud');
+        if (fraudList) {
+          setFraudLogs(fraudList.map((log: any) => ({
+            id: log._id || log.id,
+            type: log.type,
+            target: log.target,
+            reason: log.reason,
+            riskScore: log.riskScore,
+            time: log.time,
+            status: log.status
+          })));
+        }
+      } catch (err) {
+        console.warn("Could not synchronize database logs with server API. Operating in sandbox fallback mode.");
+      }
+    };
+    syncData();
+  }, []);
+
+  // Sync Socket.io real-time updates
+  useEffect(() => {
+    socketRef.current = io('http://localhost:5000');
+
+    socketRef.current.on('connect', () => {
+      console.log('📡 Full-Stack Socket.io dispatcher connected.');
+    });
+
+    socketRef.current.on('bookingUpdated', (updatedBooking: any) => {
+      const normalizedBooking: Booking = {
+        id: updatedBooking._id || updatedBooking.id,
+        category: updatedBooking.category,
+        categoryIcon: updatedBooking.categoryIcon,
+        title: updatedBooking.title,
+        providerName: updatedBooking.providerName,
+        providerPhone: updatedBooking.providerPhone,
+        status: updatedBooking.status,
+        price: updatedBooking.price,
+        date: updatedBooking.date,
+        time: updatedBooking.time,
+        progress: updatedBooking.progress,
+        routeCoordinates: updatedBooking.routeCoordinates,
+        currentPosIndex: updatedBooking.currentPosIndex
+      };
+      setBookings(prev =>
+        prev.map(b => (b.id === normalizedBooking.id) ? normalizedBooking : b)
+      );
+    });
+
+    socketRef.current.on('statusChanged', (data: { partnerId: string, isOnline: boolean }) => {
+      setPartners(prev =>
+        prev.map(p => (p.id === data.partnerId || (p as any)._id === data.partnerId) ? { ...p, isOnline: data.isOnline } : p)
+      );
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
+
   // Update i18n language changed callback
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
@@ -665,19 +757,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearCart = () => setCart([]);
 
   // Wallet operations
-  const addWalletMoney = (amount: number) => {
-    setWalletBalance(prev => prev + amount);
-    setWalletTransactions(prev => [
-      {
-        id: `tx-${Date.now()}`,
-        type: 'credit',
-        amount,
-        description: 'Deposited Money via Pay Portal',
-        date: new Date().toISOString().split('T')[0]
-      },
-      ...prev
-    ]);
-    addNotification('Wallet Credited 💰', `₹${amount} topup transaction succeeded.`, 'success');
+  // Wallet operations
+  const addWalletMoney = async (amount: number) => {
+    try {
+      const res = await apiRequest('/auth/wallet', {
+        method: 'PUT',
+        body: JSON.stringify({ amount })
+      });
+      setWalletBalance(res.walletBalance);
+      addNotification('Wallet Credited 💰', `₹${amount} topup transaction succeeded via full-stack.`, 'success');
+    } catch (err) {
+      setWalletBalance(prev => prev + amount);
+      addNotification('Wallet Credited 💰', `₹${amount} topup transaction succeeded in sandbox.`, 'success');
+    }
   };
 
   const deductWalletMoney = (amount: number, desc: string): boolean => {
@@ -685,6 +777,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addNotification('Payment Failed ❌', 'Insufficient wallet balance. Please add funds.', 'warning');
       return false;
     }
+
+    // Call API async in background
+    apiRequest('/payments/wallet/pay', {
+      method: 'POST',
+      body: JSON.stringify({ amount, description: desc })
+    }).catch(err => console.warn("Failed sync debit:", err));
+
     setWalletBalance(prev => prev - amount);
     setWalletTransactions(prev => [
       {
@@ -720,102 +819,143 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setBookings(prev => [newBooking, ...prev]);
     setActiveTrackingId(bookingId);
-    addNotification('Service Order Placed 🚀', `Assigned dispatch matching code: ${bookingId}`, 'booking');
-    
-    // Add to personalized booking history for seasonal suggestions
-    setBookingHistory(prev => {
-      const updated = [bookingData.category, ...prev.filter(c => c !== bookingData.category)];
-      return updated.slice(0, 5);
+    addNotification('Service Order Placed 🚀', `Assigned matching code: ${bookingId}`, 'booking');
+
+    // Run backend database posting in the background
+    apiRequest('/bookings', {
+      method: 'POST',
+      body: JSON.stringify({ ...bookingData, id: bookingId })
+    }).then(savedBooking => {
+      setBookings(prev => prev.map(b => b.id === bookingId ? {
+        id: savedBooking._id || savedBooking.id,
+        category: savedBooking.category,
+        categoryIcon: savedBooking.categoryIcon,
+        title: savedBooking.title,
+        providerName: savedBooking.providerName,
+        providerPhone: savedBooking.providerPhone,
+        status: savedBooking.status,
+        price: savedBooking.price,
+        date: savedBooking.date,
+        time: savedBooking.time,
+        progress: savedBooking.progress,
+        routeCoordinates: savedBooking.routeCoordinates,
+        currentPosIndex: savedBooking.currentPosIndex
+      } : b));
+    }).catch(err => {
+      console.warn("Background API sync failed, continuing in sandbox.", err);
     });
 
     return bookingId;
   };
 
-  const updateBookingStatus = (id: string, status: Booking['status']) => {
-    setBookings(prev => {
-      return prev.map(b => {
-        if (b.id === id) {
-          if (status === 'accepted') {
-            addNotification('Order Accepted 🚕', `Provider ${b.providerName} is starting now!`, 'success');
-          } else if (status === 'ongoing') {
-            addNotification('Service In-Progress 🛠', 'Route coordinates trace is active.', 'info');
-          } else if (status === 'cancelled') {
-            addNotification('Order Cancelled 🔴', `Booking ${id} was rejected or cancelled.`, 'warning');
-          }
-          return { ...b, status };
-        }
-        return b;
+  const updateBookingStatus = async (id: string, status: Booking['status']) => {
+    try {
+      await apiRequest(`/bookings/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status })
       });
-    });
+    } catch (err) {
+      setBookings(prev => {
+        return prev.map(b => {
+          if (b.id === id) {
+            if (status === 'accepted') {
+              addNotification('Order Accepted 🚕', `Provider ${b.providerName} is starting now!`, 'success');
+            } else if (status === 'ongoing') {
+              addNotification('Service In-Progress 🛠', 'Route coordinates trace is active.', 'info');
+            } else if (status === 'cancelled') {
+              addNotification('Order Cancelled 🔴', `Booking ${id} was rejected or cancelled.`, 'warning');
+            }
+            return { ...b, status };
+          }
+          return b;
+        });
+      });
+    }
   };
 
-  const togglePartnerOnline = (partnerId: string) => {
-    setPartners(prev =>
-      prev.map(p => {
-        if (p.id === partnerId) {
-          const nextStatus = !p.isOnline;
-          addNotification(
-            'Partner Status Update 💼',
-            `${p.name} is now ${nextStatus ? 'Online' : 'Offline'}.`,
-            nextStatus ? 'success' : 'info'
-          );
-          return { ...p, isOnline: nextStatus };
-        }
-        return p;
-      })
-    );
+  const togglePartnerOnline = async (partnerId: string) => {
+    try {
+      const partner = partners.find(p => p.id === partnerId);
+      const isOnline = partner ? !partner.isOnline : true;
+      await apiRequest('/partners/profile', {
+        method: 'PUT',
+        body: JSON.stringify({ isOnline })
+      });
+      socketRef.current?.emit('updateStatus', { partnerId, isOnline });
+    } catch (err) {
+      setPartners(prev =>
+        prev.map(p => {
+          if (p.id === partnerId) {
+            const nextStatus = !p.isOnline;
+            addNotification(
+              'Partner Status Update 💼',
+              `${p.name} is now ${nextStatus ? 'Online' : 'Offline'}.`,
+              nextStatus ? 'success' : 'info'
+            );
+            return { ...p, isOnline: nextStatus };
+          }
+          return p;
+        })
+      );
+    }
   };
 
   // Submit Registration and push to pending admin queue
-  const submitPartnerRegistration = () => {
-    const newId = `p-${Date.now()}`;
-    const newPartnerObj: Partner = {
-      id: newId,
-      name: partnerReg.personalDetails.name || 'John Doe',
-      avatar: partnerReg.personalDetails.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop',
-      category: partnerReg.profession || 'Handyman',
-      rating: 5.0,
-      reviewsCount: 0,
-      isOnline: partnerReg.availabilityStatus === 'Available Now',
-      distance: '2.5 km away',
-      lat: locationCoords.lat + (Math.random() - 0.5) * 0.05,
-      lng: locationCoords.lng + (Math.random() - 0.5) * 0.05,
-      phone: partnerReg.personalDetails.phone || '+91 99999 88888',
-      whatsapp: partnerReg.personalDetails.phone?.replace('+', '') || '919999988888',
-      price: partnerReg.businessDetails.pricing || 299,
-      experience: partnerReg.businessDetails.experience || '3',
-      completedJobs: 0,
-      languages: partnerReg.businessDetails.languages.length > 0 ? partnerReg.businessDetails.languages : ['English'],
-      businessName: partnerReg.businessDetails.shopName || `${partnerReg.personalDetails.name}'s Services`,
-      location: partnerReg.businessDetails.businessAddress || 'Velachery, Chennai',
-      workingTime: partnerReg.businessDetails.workingHours || '9 AM - 6 PM',
-      portfolio: partnerReg.portfolio.workPhotos.length > 0 ? partnerReg.portfolio.workPhotos : [
-        'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=200&auto=format&fit=crop'
-      ],
-      reviews: [],
-      adminStatus: 'pending',
-      aadhaarNumber: '1111 2222 3333',
-      panNumber: 'ABCDE1234F',
-      bankAccount: partnerReg.uploads.bankAccount,
-      upiId: partnerReg.uploads.upi,
-      emergencyService: partnerReg.businessDetails.emergencyService,
-      doorstepService: partnerReg.businessDetails.doorstepService,
-      gstNumber: partnerReg.businessDetails.gst,
-      website: partnerReg.businessDetails.website,
-      workingDays: partnerReg.businessDetails.workingDays,
-      serviceRadius: partnerReg.businessDetails.serviceRadius,
-      awards: partnerReg.portfolio.awards.length > 0 ? partnerReg.portfolio.awards : ['AllRounder Partner Registry'],
-      responseTime: 10,
-      cancellationRate: 1,
-      repeatCustomers: 80,
-      popularity: 85
-    };
+  const submitPartnerRegistration = async () => {
+    try {
+      const savedPartner = await apiRequest('/partners/onboard', {
+        method: 'POST',
+        body: JSON.stringify(partnerReg)
+      });
+      setPartners(prev => [...prev, savedPartner]);
+      addNotification('Registration Received 📑', 'Documents submitted to full-stack audit queue.', 'warning');
+      setPartnerReg(INITIAL_REGISTRATION);
+    } catch (err) {
+      const newId = `p-${Date.now()}`;
+      const newPartnerObj: Partner = {
+        id: newId,
+        name: partnerReg.personalDetails.name || 'John Doe',
+        avatar: partnerReg.personalDetails.photo || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop',
+        category: partnerReg.profession || 'Handyman',
+        rating: 5.0,
+        reviewsCount: 0,
+        isOnline: partnerReg.availabilityStatus === 'Available Now',
+        distance: '2.5 km away',
+        lat: locationCoords.lat + (Math.random() - 0.5) * 0.05,
+        lng: locationCoords.lng + (Math.random() - 0.5) * 0.05,
+        phone: partnerReg.personalDetails.phone || '+91 99999 88888',
+        whatsapp: partnerReg.personalDetails.phone?.replace('+', '') || '919999988888',
+        price: partnerReg.businessDetails.pricing || 299,
+        experience: partnerReg.businessDetails.experience || '3',
+        completedJobs: 0,
+        languages: partnerReg.businessDetails.languages.length > 0 ? partnerReg.businessDetails.languages : ['English'],
+        businessName: partnerReg.businessDetails.shopName || `${partnerReg.personalDetails.name}'s Services`,
+        location: partnerReg.businessDetails.businessAddress || 'Velachery, Chennai',
+        workingTime: partnerReg.businessDetails.workingHours || '9 AM - 6 PM',
+        portfolio: partnerReg.portfolio.workPhotos.length > 0 ? partnerReg.portfolio.workPhotos : [
+          'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=200&auto=format&fit=crop'
+        ],
+        reviews: [],
+        adminStatus: 'pending',
+        aadhaarNumber: '1111 2222 3333',
+        panNumber: 'ABCDE1234F',
+        bankAccount: partnerReg.uploads.bankAccount,
+        upiId: partnerReg.uploads.upi,
+        emergencyService: partnerReg.businessDetails.emergencyService,
+        doorstepService: partnerReg.businessDetails.doorstepService,
+        workingDays: partnerReg.businessDetails.workingDays,
+        serviceRadius: partnerReg.businessDetails.serviceRadius,
+        awards: partnerReg.portfolio.awards.length > 0 ? partnerReg.portfolio.awards : ['AllRounder Partner Registry'],
+        responseTime: 10,
+        cancellationRate: 1,
+        repeatCustomers: 80,
+        popularity: 85
+      };
 
-    setPartners(prev => [...prev, newPartnerObj]);
-    addNotification('Registration Received 📑', 'Documents submitted for verification.', 'warning');
-    
-    // Reset state
-    setPartnerReg(INITIAL_REGISTRATION);
+      setPartners(prev => [...prev, newPartnerObj]);
+      addNotification('Registration Received 📑', 'Documents submitted for verification in sandbox.', 'warning');
+      setPartnerReg(INITIAL_REGISTRATION);
+    }
   };
 
   const addNotification = (title: string, message: string, type: Notification['type'] = 'info') => {
