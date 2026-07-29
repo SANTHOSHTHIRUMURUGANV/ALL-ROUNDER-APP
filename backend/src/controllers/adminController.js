@@ -2,6 +2,8 @@ import { Partner } from '../models/Partner.js';
 import { Booking } from '../models/Booking.js';
 import { User } from '../models/User.js';
 import { FraudLog } from '../models/FraudLog.js';
+import { MOCK_PARTNERS } from './partnerController.js';
+import { IN_MEMORY_BOOKINGS } from './bookingController.js';
 import mongoose from 'mongoose';
 
 // In-memory fraud warnings fallback database
@@ -32,6 +34,8 @@ export const approvePartner = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (mongoose.connection.readyState !== 1) {
+      const partner = MOCK_PARTNERS.find(p => p.id === id || p._id === id);
+      if (partner) partner.adminStatus = 'approved';
       return res.status(200).json({ id, adminStatus: 'approved' });
     }
 
@@ -52,6 +56,8 @@ export const rejectPartner = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (mongoose.connection.readyState !== 1) {
+      const partner = MOCK_PARTNERS.find(p => p.id === id || p._id === id);
+      if (partner) partner.adminStatus = 'rejected';
       return res.status(200).json({ id, adminStatus: 'rejected' });
     }
 
@@ -60,6 +66,28 @@ export const rejectPartner = async (req, res, next) => {
       return res.status(404).json({ message: 'Partner profile not found' });
     }
     partner.adminStatus = 'rejected';
+    await partner.save();
+
+    res.status(200).json(partner);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reviewPartner = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState !== 1) {
+      const partner = MOCK_PARTNERS.find(p => p.id === id || p._id === id);
+      if (partner) partner.adminStatus = 'review';
+      return res.status(200).json({ id, adminStatus: 'review' });
+    }
+
+    const partner = await Partner.findById(id);
+    if (!partner) {
+      return res.status(404).json({ message: 'Partner profile not found' });
+    }
+    partner.adminStatus = 'review';
     await partner.save();
 
     res.status(200).json(partner);
@@ -98,11 +126,16 @@ export const dismissFraudLog = async (req, res, next) => {
 export const getAdminSummary = async (req, res, next) => {
   try {
     if (mongoose.connection.readyState !== 1) {
+      const activePartnersCount = MOCK_PARTNERS.filter(p => p.isOnline && p.adminStatus === 'approved').length;
+      const totalBookingsCount = IN_MEMORY_BOOKINGS.length;
+      const totalRevenue = IN_MEMORY_BOOKINGS.filter(b => b.status === 'completed').reduce((sum, b) => sum + b.price, 0);
+      const commissions = (totalRevenue * 12.5) / 100;
+      
       return res.status(200).json({
-        totalRevenue: 2850,
-        commissions: 356.25,
-        activePartnersCount: 2,
-        totalBookingsCount: 3,
+        totalRevenue,
+        commissions,
+        activePartnersCount,
+        totalBookingsCount,
         customersCount: 1
       });
     }

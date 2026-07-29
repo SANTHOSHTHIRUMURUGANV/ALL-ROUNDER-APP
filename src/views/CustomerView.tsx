@@ -247,7 +247,10 @@ export const CustomerView: React.FC = () => {
     }
 
     cart.forEach(item => {
-      const provider = partners.find(p => p.name === item.image) || partners[0];
+      const provider = partners.find(p => p.name === item.image) || partners[0] || {
+        name: 'Assigned Partner',
+        phone: '+91 99999 88888'
+      };
       const bId = addBooking({
         category: item.category,
         categoryIcon: CATEGORIES_DATA.find(c => c.name === item.category)?.icon || '🛍',

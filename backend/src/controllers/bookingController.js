@@ -3,7 +3,7 @@ import { Partner } from '../models/Partner.js';
 import mongoose from 'mongoose';
 
 // In-Memory fallback database simulation when offline
-const IN_MEMORY_BOOKINGS = [];
+export const IN_MEMORY_BOOKINGS = [];
 
 export const createBooking = async (req, res, next) => {
   try {

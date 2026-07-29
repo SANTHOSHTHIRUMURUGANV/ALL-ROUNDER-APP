@@ -2,72 +2,7 @@ import { Partner } from '../models/Partner.js';
 import { User } from '../models/User.js';
 import mongoose from 'mongoose';
 
-const MOCK_PARTNERS = [
-  {
-    id: '60b72b2f9b1d8b2d88a4e8d2',
-    _id: '60b72b2f9b1d8b2d88a4e8d2',
-    name: 'Rajesh Kumar',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    category: 'Electrician',
-    lat: 12.9805,
-    lng: 80.2190,
-    phone: '+91 98765 22222',
-    whatsapp: '+91 98765 22222',
-    price: 199,
-    experience: '6',
-    completedJobs: 42,
-    languages: ['English', 'Tamil', 'Hindi'],
-    businessName: 'Rajesh Electrical Solutions',
-    location: 'Adyar Sector 4, Chennai',
-    workingTime: '9 AM - 6 PM',
-    portfolio: [
-      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200',
-      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=200'
-    ],
-    adminStatus: 'approved',
-    emergencyService: true,
-    doorstepService: true,
-    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    serviceRadius: 10,
-    responseTime: 10,
-    cancellationRate: 2,
-    repeatCustomers: 92,
-    popularity: 95,
-    isOnline: true
-  },
-  {
-    id: '60b72b2f9b1d8b2d88a4e8d3',
-    _id: '60b72b2f9b1d8b2d88a4e8d3',
-    name: 'Anjali Sharma',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
-    category: 'Beautician',
-    lat: 12.9825,
-    lng: 80.2170,
-    phone: '+91 98765 33333',
-    whatsapp: '+91 98765 33333',
-    price: 499,
-    experience: '5',
-    completedJobs: 28,
-    languages: ['English', 'Hindi'],
-    businessName: 'Glow Beauty Parlour Studio',
-    location: 'Velachery Bypass Road, Chennai',
-    workingTime: '10 AM - 7 PM',
-    portfolio: [
-      'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=200',
-      'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200'
-    ],
-    adminStatus: 'approved',
-    emergencyService: false,
-    doorstepService: true,
-    workingDays: ['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    serviceRadius: 15,
-    responseTime: 20,
-    cancellationRate: 4,
-    repeatCustomers: 88,
-    popularity: 90,
-    isOnline: true
-  }
-];
+export const MOCK_PARTNERS = [];
 
 export const onboardPartner = async (req, res, next) => {
   try {
@@ -104,6 +39,7 @@ export const onboardPartner = async (req, res, next) => {
         popularity: 80,
         isOnline: true
       };
+      MOCK_PARTNERS.push(mockResult);
       return res.status(201).json(mockResult);
     }
 

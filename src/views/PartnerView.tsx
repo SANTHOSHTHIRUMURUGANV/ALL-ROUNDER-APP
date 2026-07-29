@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp, Partner, Booking } from '../context/AppContext';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -28,11 +28,17 @@ export const PartnerView: React.FC = () => {
 
   const { t } = useTranslation();
 
-  const [selectedPartnerId, setSelectedPartnerId] = useState<string>('p-1');
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string>('');
   const [showRegisterWizard, setShowRegisterWizard] = useState(false);
 
-  const activePartner = partners.find(p => p.id === selectedPartnerId);
+  const activePartner = partners.find(p => p.id === selectedPartnerId || (p as any)._id === selectedPartnerId) || partners[0];
   const currentStep = partnerReg.step;
+
+  useEffect(() => {
+    if (partners.length > 0 && (!selectedPartnerId || !partners.find(p => p.id === selectedPartnerId || (p as any)._id === selectedPartnerId))) {
+      setSelectedPartnerId(partners[0].id || (partners[0] as any)._id);
+    }
+  }, [partners, selectedPartnerId]);
 
   // Payout states
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -536,6 +542,18 @@ export const PartnerView: React.FC = () => {
   };
 
   const renderDashboard = () => {
+    if (partners.length === 0) {
+      return (
+        <div className="mx-auto max-w-lg px-4 py-24 text-center space-y-4">
+          <div className="mx-auto h-16 w-16 rounded-2xl bg-slate-900 border border-white/5 flex items-center justify-center">
+            <AlertCircle className="h-8 w-8 text-cyan-400 animate-pulse" />
+          </div>
+          <h2 className="text-xl font-black text-white uppercase tracking-wider">No Partner Registered Yet</h2>
+          <p className="text-sm text-slate-400">Click 'Register as Partner' to continue.</p>
+        </div>
+      );
+    }
+
     if (!activePartner) return null;
 
     const ourJobs = bookings.filter(b => b.category === activePartner.category);
@@ -543,23 +561,28 @@ export const PartnerView: React.FC = () => {
     const activeJobs = ourJobs.filter(b => b.status === 'accepted' || b.status === 'ongoing');
     const completedJobs = ourJobs.filter(b => b.status === 'completed');
 
-    const completedTotal = completedJobs.length + activePartner.completedJobs;
-    const earningsVal = completedJobs.reduce((sum, b) => sum + b.price, 0) + 1250;
+    const completedTotal = completedJobs.length + (activePartner.completedJobs || 0);
+    const earningsVal = completedJobs.reduce((sum, b) => sum + b.price, 0) + (activePartner.completedJobs ? 1250 : 0);
+
+    const displayRating = activePartner.reviewsCount > 0 ? activePartner.rating : (completedJobs.length > 0 ? 5.0 : 0.0);
+    const displayReviews = activePartner.reviewsCount > 0 ? activePartner.reviewsCount : completedJobs.length;
 
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in duration-300">
         
         {/* Verification banner check */}
-        {activePartner.adminStatus === 'pending' ? (
+        {(activePartner.adminStatus === 'pending' || activePartner.adminStatus === 'review') ? (
           <div className="rounded-3xl border border-amber-500/30 bg-amber-500/5 p-5 flex items-start gap-3">
             <AlertCircle className="h-6 w-6 text-amber-500 shrink-0 mt-0.5 animate-pulse" />
             <div>
-              <h3 className="text-sm font-extrabold text-white">⏳ PENDING VERIFICATION</h3>
+              <h3 className="text-sm font-extrabold text-white">
+                {activePartner.adminStatus === 'review' ? '⏳ UNDER REVIEW' : '⏳ PENDING VERIFICATION'}
+              </h3>
               <p className="text-xs text-slate-400 mt-1">
                 Your identity documents, Aadhaar files, and liveness selfies are pending Admin authorization. You will appear inside customer search matching directories once verified.
               </p>
               <span className="inline-block mt-3 text-[9px] font-black bg-amber-500/10 text-amber-450 px-2 py-0.5 rounded uppercase">
-                Under Audit Queue
+                {activePartner.adminStatus === 'review' ? 'Verification Under Review' : 'Verification Pending'}
               </span>
             </div>
           </div>
@@ -636,8 +659,8 @@ export const PartnerView: React.FC = () => {
 
           <div className="rounded-3xl bg-slate-900 border border-white/5 p-6 shadow-md">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{t('ratingScoreLabel')}</span>
-            <h3 className="text-2xl font-black text-white mt-1 flex items-center gap-1">★ {activePartner.rating}</h3>
-            <span className="text-[9px] text-slate-455 block mt-4">Based on {activePartner.reviewsCount} jobs</span>
+            <h3 className="text-2xl font-black text-white mt-1 flex items-center gap-1">★ {displayRating}</h3>
+            <span className="text-[9px] text-slate-455 block mt-4">Based on {displayReviews} jobs</span>
           </div>
 
         </section>

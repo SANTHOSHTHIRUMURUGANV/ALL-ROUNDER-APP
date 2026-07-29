@@ -8,6 +8,7 @@ import {
   Brain, ShieldCheck as ShieldCheckIcon, AlertTriangle, ShieldX
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { apiRequest } from '../utils/api';
 
 export const AdminView: React.FC = () => {
   const { 
@@ -42,8 +43,10 @@ export const AdminView: React.FC = () => {
 
   // KYC Approval
   const handleApprove = (pId: string) => {
+    apiRequest(`/admin/partners/${pId}/approve`, { method: 'PUT' }).catch(err => console.warn("Admin approval sync failed:", err));
+
     setPartners(prev =>
-      prev.map(p => (p.id === pId ? { ...p, adminStatus: 'approved' } : p))
+      prev.map(p => (p.id === pId || (p as any)._id === pId) ? { ...p, adminStatus: 'approved' } : p)
     );
     addNotification(
       'Partner Onboarded Successfully! ✅',
@@ -59,10 +62,22 @@ export const AdminView: React.FC = () => {
 
   // KYC Reject
   const handleReject = (pId: string) => {
+    apiRequest(`/admin/partners/${pId}/reject`, { method: 'PUT' }).catch(err => console.warn("Admin rejection sync failed:", err));
+
     setPartners(prev =>
-      prev.map(p => (p.id === pId ? { ...p, adminStatus: 'rejected' } : p))
+      prev.map(p => (p.id === pId || (p as any)._id === pId) ? { ...p, adminStatus: 'rejected' } : p)
     );
     addNotification('Partner KYC Rejected ❌', `Partner ${pId} application failed checks.`, 'warning');
+  };
+
+  // KYC Under Review
+  const handleReview = (pId: string) => {
+    apiRequest(`/admin/partners/${pId}/review`, { method: 'PUT' }).catch(err => console.warn("Admin review sync failed:", err));
+
+    setPartners(prev =>
+      prev.map(p => (p.id === pId || (p as any)._id === pId) ? { ...p, adminStatus: 'review' } : p)
+    );
+    addNotification('KYC Under Review ⏳', `Partner status updated to Under Review.`, 'info');
   };
 
   // Add Coupon
@@ -93,7 +108,7 @@ export const AdminView: React.FC = () => {
     addNotification('Security Alert Dismissed 🛡️', `Alert ${id} cleared from logs.`, 'info');
   };
 
-  const pendingPartners = partners.filter(p => p.adminStatus === 'pending');
+  const pendingPartners = partners.filter(p => p.adminStatus === 'pending' || p.adminStatus === 'review');
 
   return (
     <div className="min-h-screen bg-[#0B1020] text-slate-100">
@@ -170,6 +185,13 @@ export const AdminView: React.FC = () => {
                               {t(`categories.${partner.category}`, partner.category)}
                             </span>
                             <span className="text-[10px] text-slate-500 font-semibold">{partner.experience} Yrs Exp</span>
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                              partner.adminStatus === 'review'
+                                ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            }`}>
+                              {partner.adminStatus === 'review' ? 'Under Review' : 'Pending'}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -205,15 +227,24 @@ export const AdminView: React.FC = () => {
                         onClick={() => handleReject(partner.id)}
                         className="flex-1 rounded-xl border border-white/5 bg-slate-950 py-2.5 text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center gap-1 transition-all"
                       >
-                        <X className="h-4 w-4 text-cyan-500 shrink-0" />
+                        <X className="h-4 w-4 text-red-500 shrink-0" />
                         <span>{t('reject')}</span>
                       </button>
+                      {partner.adminStatus === 'pending' && (
+                        <button
+                          onClick={() => handleReview(partner.id)}
+                          className="flex-1 rounded-xl border border-white/5 bg-slate-950 py-2.5 text-xs font-bold text-slate-400 hover:text-amber-400 flex items-center justify-center gap-1 transition-all"
+                        >
+                          <Sliders className="h-4 w-4 text-amber-500 shrink-0" />
+                          <span>Review</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => handleApprove(partner.id)}
                         className="flex-1 rounded-xl btn-cyan-gradient py-2.5 text-xs uppercase font-black flex items-center justify-center gap-1"
                       >
                         <Check className="h-4 w-4 shrink-0" />
-                        <span>{t('verifyApprove')}</span>
+                        <span>Approve</span>
                       </button>
                     </div>
 
