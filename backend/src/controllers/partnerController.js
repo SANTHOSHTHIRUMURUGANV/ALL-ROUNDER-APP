@@ -14,8 +14,11 @@ export const onboardPartner = async (req, res, next) => {
       const mockResult = {
         _id: `60b72b2f9b1d8b2d88a4e8d${Date.now().toString().slice(-1)}`,
         name: personalDetails.name,
+        fullName: personalDetails.name,
         avatar: personalDetails.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        profilePhoto: personalDetails.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
         category: profession,
+        serviceCategory: profession,
         lat: req.user.location.lat,
         lng: req.user.location.lng,
         phone: personalDetails.phone,
@@ -23,12 +26,15 @@ export const onboardPartner = async (req, res, next) => {
         price: businessDetails.pricing || 199,
         experience: businessDetails.experience || '3',
         completedJobs: 0,
+        cancelledJobs: 0,
+        earnings: 0,
         languages: businessDetails.languages || ['English'],
         businessName: businessDetails.businessName || `${personalDetails.name} Services`,
         location: personalDetails.address || req.user.location.address,
         workingTime: businessDetails.workingHours || '9 AM - 6 PM',
         portfolio: portfolio?.workPhotos || [],
         adminStatus: 'pending',
+        verificationStatus: 'pending',
         emergencyService: businessDetails.emergencyService || false,
         doorstepService: businessDetails.doorstepService || true,
         workingDays: businessDetails.workingDays || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
@@ -46,8 +52,11 @@ export const onboardPartner = async (req, res, next) => {
     const partner = await Partner.create({
       userId: req.user._id,
       name: personalDetails.name,
+      fullName: personalDetails.name,
       avatar: personalDetails.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      profilePhoto: personalDetails.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
       category: profession,
+      serviceCategory: profession,
       lat: req.user.location.lat + (Math.random() - 0.5) * 0.05,
       lng: req.user.location.lng + (Math.random() - 0.5) * 0.05,
       phone: personalDetails.phone,
@@ -55,12 +64,15 @@ export const onboardPartner = async (req, res, next) => {
       price: businessDetails.pricing || 199,
       experience: businessDetails.experience || '3',
       completedJobs: 0,
+      cancelledJobs: 0,
+      earnings: 0,
       languages: businessDetails.languages || ['English', 'Tamil'],
       businessName: businessDetails.businessName || `${personalDetails.name} Services`,
       location: personalDetails.address || req.user.location.address,
       workingTime: businessDetails.workingHours || '9 AM - 6 PM',
       portfolio: portfolio?.workPhotos || [],
       adminStatus: 'pending',
+      verificationStatus: 'pending',
       aadhaarNumber: uploads.aadhaarFile || 'AadhaarVerified.pdf',
       panNumber: uploads.panFile || 'PanVerified.pdf',
       bankAccount: uploads.bankAccount || '1234567890',
@@ -103,7 +115,6 @@ export const getNearbyPartners = async (req, res, next) => {
       partnersList = partnersList.filter(p => p.category.toLowerCase() === category.toLowerCase());
     }
 
-    // Filter list
     if (search) {
       const q = search.toLowerCase();
       partnersList = partnersList.filter(p => 
@@ -120,7 +131,6 @@ export const getNearbyPartners = async (req, res, next) => {
       partnersList = partnersList.filter(p => p.doorstepService);
     }
 
-    // Proximity logic
     const userLat = req.user?.location?.lat || 12.9815;
     const userLng = req.user?.location?.lng || 80.2180;
 
@@ -130,7 +140,6 @@ export const getNearbyPartners = async (req, res, next) => {
       return p;
     });
 
-    // Sort list
     if (sortBy === 'distance') {
       partnersList.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
     } else if (sortBy === 'rating') {
@@ -166,6 +175,93 @@ export const updatePartnerProfile = async (req, res, next) => {
 
     await partner.save();
     res.status(200).json(partner);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const registerPartner = async (req, res, next) => {
+  return onboardPartner(req, res, next);
+};
+
+export const getPartners = async (req, res, next) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json(MOCK_PARTNERS);
+    }
+    const partners = await Partner.find({}).populate('userId', 'name email phone');
+    res.status(200).json(partners);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPartnerById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState !== 1) {
+      const p = MOCK_PARTNERS.find(x => x._id === id || x.id === id);
+      return res.status(200).json(p || MOCK_PARTNERS[0]);
+    }
+    const partner = await Partner.findById(id).populate('userId', 'name email phone');
+    if (!partner) return res.status(404).json({ message: 'Partner not found' });
+    res.status(200).json(partner);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePartner = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json({ id, ...req.body });
+    }
+    const partner = await Partner.findByIdAndUpdate(id, req.body, { new: true });
+    if (!partner) return res.status(404).json({ message: 'Partner not found' });
+    res.status(200).json(partner);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const approvePartner = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json({ id, adminStatus: 'approved' });
+    }
+    const partner = await Partner.findByIdAndUpdate(id, { adminStatus: 'approved' }, { new: true });
+    if (!partner) return res.status(404).json({ message: 'Partner not found' });
+    res.status(200).json(partner);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rejectPartner = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json({ id, adminStatus: 'rejected' });
+    }
+    const partner = await Partner.findByIdAndUpdate(id, { adminStatus: 'rejected' }, { new: true });
+    if (!partner) return res.status(404).json({ message: 'Partner not found' });
+    res.status(200).json(partner);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deletePartner = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json({ id, message: 'Deleted' });
+    }
+    const partner = await Partner.findByIdAndDelete(id);
+    if (!partner) return res.status(404).json({ message: 'Partner not found' });
+    res.status(200).json({ message: 'Partner deleted successfully' });
   } catch (error) {
     next(error);
   }

@@ -95,3 +95,24 @@ export const processWalletPayment = async (req, res, next) => {
     next(error);
   }
 };
+
+export const createPayment = async (req, res, next) => {
+  try {
+    const { bookingId, amount, paymentMethod, paymentStatus, transactionId } = req.body;
+    
+    const payment = await Payment.create({
+      userId: req.user ? req.user._id : null,
+      bookingId,
+      amount,
+      gateway: paymentMethod || 'wallet',
+      status: paymentStatus || 'success',
+      paymentMethod: paymentMethod || 'wallet',
+      paymentStatus: paymentStatus || 'success',
+      transactionId: transactionId || `tx_${Date.now()}`
+    });
+
+    res.status(201).json(payment);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -7,7 +7,7 @@ export const IN_MEMORY_BOOKINGS = [];
 
 export const createBooking = async (req, res, next) => {
   try {
-    const { category, categoryIcon, title, providerName, providerPhone, price } = req.body;
+    const { category, categoryIcon, title, providerName, providerPhone, price, notes } = req.body;
     
     const routeCoordinates = [];
     for (let i = 0; i < 10; i++) {
@@ -29,12 +29,17 @@ export const createBooking = async (req, res, next) => {
       providerName: providerName || 'Rajesh Kumar',
       providerPhone: providerPhone || '+91 98765 22222',
       price,
+      amount: price,
       date: new Date().toLocaleDateString(),
+      bookingDate: new Date().toLocaleDateString(),
       time: new Date().toLocaleTimeString().substring(0, 5),
+      bookingTime: new Date().toLocaleTimeString().substring(0, 5),
       status: 'pending',
+      bookingStatus: 'pending',
       progress: 0,
       routeCoordinates,
       currentPosIndex: 0,
+      notes: notes || '',
       createdAt: new Date()
     };
 
@@ -52,14 +57,20 @@ export const createBooking = async (req, res, next) => {
       customerId: req.user._id,
       partnerId: partner ? partner._id : null,
       category,
+      service: category,
       categoryIcon,
       title,
       providerName,
       providerPhone,
       price,
+      amount: price,
       date: new Date().toLocaleDateString(),
+      bookingDate: new Date().toLocaleDateString(),
       time: new Date().toLocaleTimeString().substring(0, 5),
+      bookingTime: new Date().toLocaleTimeString().substring(0, 5),
       status: 'pending',
+      bookingStatus: 'pending',
+      notes: notes || '',
       progress: 0,
       routeCoordinates,
       currentPosIndex: 0
@@ -101,7 +112,7 @@ export const getBookings = async (req, res, next) => {
 export const updateBookingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status, progress, currentPosIndex } = req.body;
+    const { status, bookingStatus, progress, currentPosIndex, paymentStatus } = req.body;
 
     if (mongoose.connection.readyState !== 1) {
       const booking = IN_MEMORY_BOOKINGS.find(b => b.id === id || b._id === id);
@@ -109,9 +120,17 @@ export const updateBookingStatus = async (req, res, next) => {
         return res.status(404).json({ message: 'Booking entry not found' });
       }
 
-      if (status !== undefined) booking.status = status;
+      if (status !== undefined) {
+        booking.status = status;
+        booking.bookingStatus = status;
+      }
+      if (bookingStatus !== undefined) {
+        booking.status = bookingStatus;
+        booking.bookingStatus = bookingStatus;
+      }
       if (progress !== undefined) booking.progress = progress;
       if (currentPosIndex !== undefined) booking.currentPosIndex = currentPosIndex;
+      if (paymentStatus !== undefined) booking.paymentStatus = paymentStatus;
 
       if (req.io) {
         req.io.emit('bookingUpdated', booking);
@@ -124,9 +143,17 @@ export const updateBookingStatus = async (req, res, next) => {
       return res.status(404).json({ message: 'Booking entry not found' });
     }
 
-    if (status !== undefined) booking.status = status;
+    if (status !== undefined) {
+      booking.status = status;
+      booking.bookingStatus = status;
+    }
+    if (bookingStatus !== undefined) {
+      booking.status = bookingStatus;
+      booking.bookingStatus = bookingStatus;
+    }
     if (progress !== undefined) booking.progress = progress;
     if (currentPosIndex !== undefined) booking.currentPosIndex = currentPosIndex;
+    if (paymentStatus !== undefined) booking.paymentStatus = paymentStatus;
 
     await booking.save();
 
@@ -135,6 +162,37 @@ export const updateBookingStatus = async (req, res, next) => {
     }
 
     res.status(200).json(booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getBookingById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState !== 1) {
+      const b = IN_MEMORY_BOOKINGS.find(x => x.id === id || x._id === id);
+      return res.status(200).json(b || IN_MEMORY_BOOKINGS[0]);
+    }
+    const booking = await Booking.findById(id).populate('customerId partnerId');
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    res.status(200).json(booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteBooking = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState !== 1) {
+      const idx = IN_MEMORY_BOOKINGS.findIndex(x => x.id === id || x._id === id);
+      if (idx !== -1) IN_MEMORY_BOOKINGS.splice(idx, 1);
+      return res.status(200).json({ message: 'Booking deleted' });
+    }
+    const booking = await Booking.findByIdAndDelete(id);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    res.status(200).json({ message: 'Booking deleted successfully' });
   } catch (error) {
     next(error);
   }
