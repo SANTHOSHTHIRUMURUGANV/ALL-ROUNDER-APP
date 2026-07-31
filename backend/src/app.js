@@ -3,7 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectDB } from './config/db.js';
+import mongoose from 'mongoose';
 import { errorHandler } from './middleware/errorMiddleware.js';
 
 // Import Routers
@@ -32,9 +32,13 @@ const io = new Server(server, {
 });
 
 // Database Connectivity
-connectDB().then(() => {
-  seedDatabase();
-});
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+    seedDatabase();
+  })
+  .catch((err) => console.log(err));
 
 // Middleware
 app.use(cors());
