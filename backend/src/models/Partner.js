@@ -21,7 +21,7 @@ const partnerSchema = new mongoose.Schema({
   location: { type: String, required: true },
   workingTime: { type: String, default: '9 AM - 6 PM' },
   portfolio: [{ type: String }],
-  adminStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  adminStatus: { type: String, enum: ['pending', 'review', 'approved', 'rejected'], default: 'pending' },
   aadhaarNumber: { type: String, required: true },
   panNumber: { type: String, required: true },
   bankAccount: { type: String, required: true },

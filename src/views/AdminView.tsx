@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp, Partner, FraudLog } from '../context/AppContext';
 import { useTranslation } from 'react-i18next';
 import { 
   BarChart2, Users, FileText, Check, X, ShieldAlert,
   ArrowUpRight, Sliders, PlayCircle, ShieldCheck, Megaphone,
   BellRing, Coins, Percent, AlertOctagon, Activity, Eye, UserCheck,
-  Brain, ShieldCheck as ShieldCheckIcon, AlertTriangle, ShieldX
+  Brain, ShieldCheck as ShieldCheckIcon, AlertTriangle, ShieldX,
+  Database, Search, ArrowUpDown, RefreshCw, Trash2, Ban
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { apiRequest } from '../utils/api';
@@ -18,7 +19,7 @@ export const AdminView: React.FC = () => {
   const { t } = useTranslation();
 
   // Active Admin Tabs
-  const [activeTab, setActiveTab] = useState<'verifications' | 'operations' | 'coupons' | 'broadcast' | 'fraud'>('verifications');
+  const [activeTab, setActiveTab] = useState<'verifications' | 'sheets' | 'operations' | 'coupons' | 'broadcast' | 'fraud'>('verifications');
 
   // Stats calculations
   const totalRevenue = bookings.reduce((sum, b) => sum + b.price, 0);
@@ -40,6 +41,163 @@ export const AdminView: React.FC = () => {
   // Broadcast Notification
   const [broadcastTitle, setBroadcastTitle] = useState('Dynamic Surge alert');
   const [broadcastText, setBroadcastText] = useState('Heavy passenger demands in Velachery have initiated a 1.4x pricing multiplier.');
+
+  // Spreadsheet Data Grid states
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allPartners, setAllPartners] = useState<any[]>([]);
+  const [allBookings, setAllBookings] = useState<any[]>([]);
+  const [allPayments, setAllPayments] = useState<any[]>([]);
+  const [allReviews, setAllReviews] = useState<any[]>([]);
+  const [allNotifications, setAllNotifications] = useState<any[]>([]);
+  
+  const [activeSheet, setActiveSheet] = useState<'users' | 'partners' | 'bookings' | 'payments' | 'reviews' | 'notifications'>('users');
+  const [sheetSearch, setSheetSearch] = useState('');
+  const [sortKey, setSortKey] = useState('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [loadingSheet, setLoadingSheet] = useState(false);
+
+  const fetchSheetData = async () => {
+    setLoadingSheet(true);
+    try {
+      if (activeSheet === 'users') {
+        const data = await apiRequest('/admin/users');
+        if (data) setAllUsers(data);
+      } else if (activeSheet === 'partners') {
+        const data = await apiRequest('/admin/partners');
+        if (data) setAllPartners(data);
+      } else if (activeSheet === 'bookings') {
+        const data = await apiRequest('/admin/bookings');
+        if (data) setAllBookings(data);
+      } else if (activeSheet === 'payments') {
+        const data = await apiRequest('/admin/payments');
+        if (data) setAllPayments(data);
+      } else if (activeSheet === 'reviews') {
+        const data = await apiRequest('/admin/reviews');
+        if (data) setAllReviews(data);
+      } else if (activeSheet === 'notifications') {
+        const data = await apiRequest('/admin/notifications');
+        if (data) setAllNotifications(data);
+      }
+    } catch (err) {
+      console.warn("Failed to load sheet data:", err);
+    } finally {
+      setLoadingSheet(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'sheets') {
+      fetchSheetData();
+    }
+  }, [activeTab, activeSheet]);
+
+  const handleToggleBlockUser = async (uId: string, currentBlocked: boolean) => {
+    try {
+      const nextBlocked = !currentBlocked;
+      await apiRequest(`/admin/users/${uId}/block`, {
+        method: 'PUT',
+        body: JSON.stringify({ isBlocked: nextBlocked })
+      });
+      setAllUsers(prev => prev.map(u => (u._id === uId || u.id === uId) ? { ...u, isBlocked: nextBlocked, role: nextBlocked ? 'blocked' : 'customer' } : u));
+      addNotification('User Status Updated 👤', `User block status updated.`, 'info');
+    } catch (err) {
+      console.warn("Failed to toggle block status:", err);
+    }
+  };
+
+  const handleUpdatePartnerStatusSheet = async (pId: string, nextStatus: string) => {
+    try {
+      const endpoint = nextStatus === 'approved' 
+        ? `/admin/partners/${pId}/approve` 
+        : nextStatus === 'rejected'
+          ? `/admin/partners/${pId}/reject`
+          : `/admin/partners/${pId}/review`;
+      await apiRequest(endpoint, { method: 'PUT' });
+      setAllPartners(prev => prev.map(p => (p._id === pId || p.id === pId) ? { ...p, adminStatus: nextStatus } : p));
+      setPartners(prev => prev.map(p => ((p as any)._id === pId || p.id === pId) ? { ...p, adminStatus: nextStatus as any } : p));
+      addNotification('Partner Status Updated 💼', `Partner verification updated to ${nextStatus}.`, 'success');
+    } catch (err) {
+      console.warn("Failed to update partner verification:", err);
+    }
+  };
+
+  const handleUpdateBookingStatusSheet = async (bId: string, nextStatus: string) => {
+    try {
+      await apiRequest(`/bookings/${bId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: nextStatus })
+      });
+      setAllBookings(prev => prev.map(b => (b._id === bId || b.id === bId) ? { ...b, status: nextStatus } : b));
+      addNotification('Booking Status Updated 📅', `Booking status updated to ${nextStatus}.`, 'info');
+    } catch (err) {
+      console.warn("Failed to update booking status:", err);
+    }
+  };
+
+  const handleToggleFakeReview = async (reviewId: string, currentFake: boolean) => {
+    try {
+      setAllReviews(prev => prev.map(r => (r._id === reviewId || r.id === reviewId) ? { ...r, isFake: !currentFake } : r));
+      addNotification('Review Security Alert 🛡️', `Review flagged status updated.`, 'warning');
+    } catch (err) {
+      console.warn("Failed to toggle fake review:", err);
+    }
+  };
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
+  const getFilteredAndSortedData = () => {
+    let data: any[] = [];
+    if (activeSheet === 'users') data = [...allUsers];
+    else if (activeSheet === 'partners') data = [...allPartners];
+    else if (activeSheet === 'bookings') data = [...allBookings];
+    else if (activeSheet === 'payments') data = [...allPayments];
+    else if (activeSheet === 'reviews') data = [...allReviews];
+    else if (activeSheet === 'notifications') data = [...allNotifications];
+
+    if (sheetSearch.trim()) {
+      const q = sheetSearch.toLowerCase();
+      data = data.filter(row => {
+        return Object.entries(row).some(([key, val]) => {
+          if (val === null || val === undefined) return false;
+          if (typeof val === 'object') return JSON.stringify(val).toLowerCase().includes(q);
+          return String(val).toLowerCase().includes(q);
+        });
+      });
+    }
+
+    if (sortKey) {
+      data.sort((a, b) => {
+        let valA = a[sortKey];
+        let valB = b[sortKey];
+
+        if (typeof valA === 'object' && valA !== null) valA = JSON.stringify(valA);
+        if (typeof valB === 'object' && valB !== null) valB = JSON.stringify(valB);
+
+        if (valA === undefined || valA === null) return 1;
+        if (valB === undefined || valB === null) return -1;
+
+        if (typeof valA === 'number' && typeof valB === 'number') {
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
+        }
+
+        const strA = String(valA).toLowerCase();
+        const strB = String(valB).toLowerCase();
+
+        if (strA < strB) return sortDirection === 'asc' ? -1 : 1;
+        if (strA > strB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return data;
+  };
 
   // KYC Approval
   const handleApprove = (pId: string) => {
@@ -129,7 +287,8 @@ export const AdminView: React.FC = () => {
         <div className="mx-auto max-w-7xl flex items-center space-x-1.5 p-3 overflow-x-auto scrollbar-none">
           {[
             { id: 'verifications', label: t('kycQueue'), icon: '📝' },
-            { id: 'operations', label: t('operationsLog'), icon: '📊' },
+            { id: 'sheets', label: 'Spreadsheet Grid', icon: '📊' },
+            { id: 'operations', label: t('operationsLog'), icon: '📈' },
             { id: 'coupons', label: t('couponsCenter'), icon: '🎟' },
             { id: 'broadcast', label: t('emergencyAlerts'), icon: '📢' },
             { id: 'fraud', label: 'AI Fraud Desk', icon: '🤖' }
@@ -252,6 +411,320 @@ export const AdminView: React.FC = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Tab: Spreadsheet Grid */}
+        {activeTab === 'sheets' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+              <div>
+                <h3 className="text-sm font-black uppercase text-cyan-400 tracking-wider">Spreadsheet Data Grid</h3>
+                <p className="text-[10px] text-slate-400 font-bold">Search, sort, edit, and audit collections dynamically connected to MongoDB</p>
+              </div>
+              <button 
+                onClick={fetchSheetData}
+                className="self-start sm:self-auto rounded-xl border border-white/10 bg-slate-900 px-4 py-2 text-xs font-black uppercase text-slate-450 hover:text-white flex items-center gap-1.5 transition-all"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loadingSheet ? 'animate-spin' : ''}`} />
+                <span>Refresh Grid</span>
+              </button>
+            </div>
+
+            {/* Sheets Switcher Toolbar */}
+            <div className="flex flex-wrap items-center gap-2 bg-slate-900/50 p-2.5 rounded-2xl border border-white/5">
+              {[
+                { id: 'users', label: 'users', icon: '👤' },
+                { id: 'partners', label: 'partners', icon: '💼' },
+                { id: 'bookings', label: 'bookings', icon: '📅' },
+                { id: 'payments', label: 'payments', icon: '💳' },
+                { id: 'reviews', label: 'reviews', icon: '⭐' },
+                { id: 'notifications', label: 'notifications', icon: '🔔' }
+              ].map(sheet => (
+                <button
+                  key={sheet.id}
+                  onClick={() => {
+                    setActiveSheet(sheet.id as any);
+                    setSortKey('');
+                  }}
+                  className={`rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 border ${
+                    activeSheet === sheet.id
+                      ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]'
+                      : 'bg-slate-950 border-white/5 text-slate-400 hover:text-white hover:border-white/10'
+                  }`}
+                >
+                  <span>{sheet.icon}</span>
+                  <span>{sheet.label}</span>
+                </button>
+              ))}
+
+              <div className="ml-auto w-full sm:w-64 relative">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search active sheet..."
+                  value={sheetSearch}
+                  onChange={e => setSheetSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950 border border-white/5 text-xs outline-none focus:border-cyan-500/40 text-slate-200"
+                />
+              </div>
+            </div>
+
+            {/* Google Sheets Table Grid */}
+            <div className="rounded-2xl border border-white/10 overflow-hidden bg-slate-950/80 shadow-2xl">
+              <div className="overflow-x-auto max-h-[500px]">
+                <table className="min-w-full divide-y divide-white/10 border-collapse text-left text-xs">
+                  <thead className="bg-[#151B35] sticky top-0 z-10">
+                    <tr className="divide-x divide-white/5">
+                      {activeSheet === 'users' && (
+                        <>
+                          <th onClick={() => handleSort('_id')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">ID <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('name')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Name <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('email')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Email <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('phone')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Phone <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('role')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Role <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('walletBalance')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Wallet <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th className="p-3 font-black uppercase text-slate-300 tracking-wider">Status/Actions</th>
+                        </>
+                      )}
+                      {activeSheet === 'partners' && (
+                        <>
+                          <th onClick={() => handleSort('name')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Name <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('category')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Trade <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('businessName')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Shop/Business <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('price')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Price/Visit <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('experience')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Experience <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('isOnline')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Online <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('adminStatus')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Status <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th className="p-3 font-black uppercase text-slate-300 tracking-wider">Actions</th>
+                        </>
+                      )}
+                      {activeSheet === 'bookings' && (
+                        <>
+                          <th onClick={() => handleSort('_id')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Booking ID <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('category')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Category <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('provider')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Provider <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('price')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Amount <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('status')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Status <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('date')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Date <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('paymentMethod')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Payment <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                        </>
+                      )}
+                      {activeSheet === 'payments' && (
+                        <>
+                          <th onClick={() => handleSort('_id')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Tx ID <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('userId')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">User ID <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('amount')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Amount <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('gateway')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Gateway <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('gatewayPaymentId')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Payment Ref <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('status')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Status <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('createdAt')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Timestamp <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                        </>
+                      )}
+                      {activeSheet === 'reviews' && (
+                        <>
+                          <th onClick={() => handleSort('_id')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Review ID <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('partnerId')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Partner ID <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('name')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Author <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('rating')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Stars <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th className="p-3 font-black uppercase text-slate-300 tracking-wider">Feedback Comment</th>
+                          <th onClick={() => handleSort('isFake')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Spam/Fake <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th className="p-3 font-black uppercase text-slate-300 tracking-wider">Actions</th>
+                        </>
+                      )}
+                      {activeSheet === 'notifications' && (
+                        <>
+                          <th onClick={() => handleSort('_id')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">ID <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('userId')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Target User ID <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th onClick={() => handleSort('title')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Title <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                          <th className="p-3 font-black uppercase text-slate-300 tracking-wider">Content Message</th>
+                          <th onClick={() => handleSort('time')} className="p-3 font-black uppercase text-slate-300 tracking-wider cursor-pointer hover:bg-slate-800 transition-colors">Time <ArrowUpDown className="inline h-3 w-3 ml-0.5" /></th>
+                        </>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {loadingSheet ? (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-slate-500">
+                          <RefreshCw className="h-6 w-6 animate-spin mx-auto text-cyan-400 mb-2" />
+                          <span>Loading active collection data from MongoDB...</span>
+                        </td>
+                      </tr>
+                    ) : getFilteredAndSortedData().length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-slate-500 font-bold uppercase tracking-wider">
+                          No matching records found.
+                        </td>
+                      </tr>
+                    ) : (
+                      getFilteredAndSortedData().map((row, index) => (
+                        <tr 
+                          key={row._id || row.id || index}
+                          className={`divide-x divide-white/5 hover:bg-slate-900/60 transition-colors ${
+                            index % 2 === 0 ? 'bg-slate-950/40' : 'bg-slate-900/20'
+                          }`}
+                        >
+                          {activeSheet === 'users' && (
+                            <>
+                              <td className="p-3 font-mono text-[10px] text-slate-500">{row._id || row.id}</td>
+                              <td className="p-3 font-bold text-white">{row.name}</td>
+                              <td className="p-3 text-slate-300">{row.email}</td>
+                              <td className="p-3 text-slate-350">{row.phone || 'N/A'}</td>
+                              <td className="p-3">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                  row.role === 'admin' 
+                                    ? 'bg-purple-500/10 text-purple-400' 
+                                    : row.role === 'blocked' 
+                                      ? 'bg-red-500/10 text-red-400' 
+                                      : 'bg-cyan-500/10 text-cyan-400'
+                                }`}>
+                                  {row.role}
+                                </span>
+                              </td>
+                              <td className="p-3 font-black text-emerald-400">₹{row.walletBalance}</td>
+                              <td className="p-3">
+                                {row.role !== 'admin' && (
+                                  <button
+                                    onClick={() => handleToggleBlockUser(row._id || row.id, row.role === 'blocked')}
+                                    className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase border transition-all ${
+                                      row.role === 'blocked'
+                                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white'
+                                        : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'
+                                    }`}
+                                  >
+                                    {row.role === 'blocked' ? 'Unblock' : 'Block'}
+                                  </button>
+                                )}
+                              </td>
+                            </>
+                          )}
+                          {activeSheet === 'partners' && (
+                            <>
+                              <td className="p-3 font-bold text-white flex items-center gap-2">
+                                <img src={row.avatar} className="h-6 w-6 rounded-full object-cover border border-white/10" />
+                                <span>{row.name}</span>
+                              </td>
+                              <td className="p-3 text-slate-300">{row.category}</td>
+                              <td className="p-3 text-slate-300">{row.businessName}</td>
+                              <td className="p-3 font-bold text-cyan-400">₹{row.price}</td>
+                              <td className="p-3 text-slate-400">{row.experience} Yrs</td>
+                              <td className="p-3">
+                                <span className={`h-2 w-2 rounded-full inline-block mr-1.5 ${row.isOnline ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                                <span className="text-[10px] uppercase font-bold text-slate-450">{row.isOnline ? 'Online' : 'Offline'}</span>
+                              </td>
+                              <td className="p-3">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                  row.adminStatus === 'approved'
+                                    ? 'bg-emerald-500/10 text-emerald-400'
+                                    : row.adminStatus === 'review'
+                                      ? 'bg-indigo-500/10 text-indigo-400'
+                                      : row.adminStatus === 'rejected'
+                                        ? 'bg-red-500/10 text-red-400'
+                                        : 'bg-amber-500/10 text-amber-400'
+                                }`}>
+                                  {row.adminStatus}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <select
+                                  value={row.adminStatus}
+                                  onChange={e => handleUpdatePartnerStatusSheet(row._id || row.id, e.target.value)}
+                                  className="bg-slate-900 border border-white/10 rounded px-1.5 py-0.5 text-[10px] outline-none text-slate-300 cursor-pointer focus:border-cyan-400"
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="review">Review</option>
+                                  <option value="approved">Approved</option>
+                                  <option value="rejected">Rejected</option>
+                                </select>
+                              </td>
+                            </>
+                          )}
+                          {activeSheet === 'bookings' && (
+                            <>
+                              <td className="p-3 font-mono text-[10px] text-slate-500">{row._id || row.id}</td>
+                              <td className="p-3 text-slate-300 font-bold">{row.category}</td>
+                              <td className="p-3 text-white font-bold">{row.provider?.name || 'Assigned'}</td>
+                              <td className="p-3 font-bold text-cyan-400">₹{row.price}</td>
+                              <td className="p-3">
+                                <select
+                                  value={row.status}
+                                  onChange={e => handleUpdateBookingStatusSheet(row._id || row.id, e.target.value)}
+                                  className="bg-slate-900 border border-white/10 rounded px-1.5 py-0.5 text-[10px] outline-none text-slate-300 cursor-pointer focus:border-cyan-400"
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="accepted">Accepted</option>
+                                  <option value="ontheway">On The Way</option>
+                                  <option value="started">Started</option>
+                                  <option value="completed">Completed</option>
+                                  <option value="cancelled">Cancelled</option>
+                                </select>
+                              </td>
+                              <td className="p-3 text-slate-400">{row.date}</td>
+                              <td className="p-3 uppercase text-slate-500">{row.paymentMethod}</td>
+                            </>
+                          )}
+                          {activeSheet === 'payments' && (
+                            <>
+                              <td className="p-3 font-mono text-[10px] text-slate-500">{row._id || row.id}</td>
+                              <td className="p-3 font-mono text-[10px] text-slate-400">{row.userId}</td>
+                              <td className="p-3 font-black text-emerald-400">₹{row.amount}</td>
+                              <td className="p-3 uppercase text-slate-300 font-bold">{row.gateway}</td>
+                              <td className="p-3 font-mono text-[10px] text-slate-350">{row.gatewayPaymentId || 'N/A'}</td>
+                              <td className="p-3">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                  row.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+                                }`}>
+                                  {row.status}
+                                </span>
+                              </td>
+                              <td className="p-3 text-slate-400">{new Date(row.createdAt).toLocaleString()}</td>
+                            </>
+                          )}
+                          {activeSheet === 'reviews' && (
+                            <>
+                              <td className="p-3 font-mono text-[10px] text-slate-500">{row._id || row.id}</td>
+                              <td className="p-3 font-mono text-[10px] text-slate-400">{row.partnerId}</td>
+                              <td className="p-3 font-bold text-white">{row.name}</td>
+                              <td className="p-3 text-amber-400 font-bold">★ {row.rating}</td>
+                              <td className="p-3 text-slate-300 italic max-w-xs truncate" title={row.comment}>{row.comment}</td>
+                              <td className="p-3">
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                                  row.isFake ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400'
+                                }`}>
+                                  {row.isFake ? 'Spam Detected' : 'Verified Review'}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <button
+                                  onClick={() => handleToggleFakeReview(row._id || row.id, row.isFake)}
+                                  className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all ${
+                                    row.isFake
+                                      ? 'bg-emerald-500/10 text-emerald-405 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white'
+                                      : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white'
+                                  }`}
+                                >
+                                  {row.isFake ? 'Verify' : 'Spam'}
+                                </button>
+                              </td>
+                            </>
+                          )}
+                          {activeSheet === 'notifications' && (
+                            <>
+                              <td className="p-3 font-mono text-[10px] text-slate-500">{row._id || row.id}</td>
+                              <td className="p-3 font-mono text-[10px] text-slate-400">{row.userId || 'Global broadcast'}</td>
+                              <td className="p-3 font-bold text-white">{row.title}</td>
+                              <td className="p-3 text-slate-300 max-w-sm truncate" title={row.message}>{row.message}</td>
+                              <td className="p-3 text-slate-500">{row.time || 'N/A'}</td>
+                            </>
+                          )}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 

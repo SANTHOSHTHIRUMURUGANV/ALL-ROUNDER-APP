@@ -341,17 +341,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             country: user.location.country
           });
         }
-        
+      } catch (err) {
+        console.warn("Could not sync user profile. Using client sandbox user profile.");
+      }
+
+      try {
         const partnersList = await apiRequest('/partners/nearby');
         if (partnersList && partnersList.length > 0) {
           setPartners(partnersList);
         }
+      } catch (err) {
+        console.warn("Could not sync partners list.");
+      }
 
+      try {
         const bookingsList = await apiRequest('/bookings');
         if (bookingsList) {
           setBookings(bookingsList);
         }
+      } catch (err) {
+        console.warn("Could not sync bookings.");
+      }
 
+      try {
         const fraudList = await apiRequest('/admin/fraud');
         if (fraudList) {
           setFraudLogs(fraudList.map((log: any) => ({
@@ -365,7 +377,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           })));
         }
       } catch (err) {
-        console.warn("Could not synchronize database logs with server API. Operating in sandbox fallback mode.");
+        console.warn("Could not sync fraud warnings (unauthorized for customer role).");
       }
     };
     syncData();
