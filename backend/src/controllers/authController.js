@@ -1,4 +1,5 @@
 import { User } from '../models/User.js';
+import { Wallet } from '../models/Wallet.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
@@ -123,6 +124,22 @@ export const depositWallet = async (req, res, next) => {
     const { amount } = req.body;
     req.user.walletBalance += amount;
     await req.user.save();
+
+    if (mongoose.connection.readyState === 1) {
+      let wallet = await Wallet.findOne({ userId: req.user._id });
+      if (!wallet) {
+        wallet = new Wallet({ userId: req.user._id, balance: req.user.walletBalance });
+      } else {
+        wallet.balance = req.user.walletBalance;
+      }
+      wallet.transactions.push({
+        amount,
+        type: 'deposit',
+        description: 'Wallet recharge deposit'
+      });
+      await wallet.save();
+    }
+
     res.status(200).json({ walletBalance: req.user.walletBalance });
   } catch (error) {
     next(error);
