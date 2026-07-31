@@ -27,7 +27,7 @@ export const AdminView: React.FC = () => {
   const adminCommissions = (totalRevenue * commissionRate) / 100;
   
   // Dynamic Pricing surge variables
-  const [surgeMultiplier, setSurgeMultiplier] = useState(1.4);
+  const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
   const [aiSurgeActive, setAiSurgeActive] = useState(true);
 
   // Coupon states
@@ -90,6 +90,14 @@ export const AdminView: React.FC = () => {
       fetchSheetData();
     }
   }, [activeTab, activeSheet]);
+
+  useEffect(() => {
+    if (aiSurgeActive) {
+      const activeBookingsCount = bookings.filter(b => b.status === 'pending' || b.status === 'accepted' || b.status === 'ongoing').length;
+      const computedSurge = activeBookingsCount > 10 ? 1.8 : activeBookingsCount > 5 ? 1.4 : activeBookingsCount > 2 ? 1.2 : 1.0;
+      setSurgeMultiplier(computedSurge);
+    }
+  }, [bookings, aiSurgeActive]);
 
   const handleToggleBlockUser = async (uId: string, currentBlocked: boolean) => {
     try {
@@ -736,13 +744,15 @@ export const AdminView: React.FC = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-3xl bg-slate-900 border border-white/5 p-5 shadow-sm">
                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{t('grossMerchandise')}</span>
-                <h3 className="text-xl sm:text-2xl font-black text-white mt-1">₹{totalRevenue + 12500}</h3>
-                <span className="text-[9px] text-emerald-400 font-bold block mt-2">▲ 14.5% versus last week</span>
+                <h3 className="text-xl sm:text-2xl font-black text-white mt-1">₹{totalRevenue}</h3>
+                <span className="text-[9px] text-cyan-400 font-bold block mt-2">Live database aggregates</span>
               </div>
 
               <div className="rounded-3xl bg-slate-900 border border-white/5 p-5 shadow-sm">
                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{t('totalBookings')}</span>
-                <h3 className="text-xl sm:text-2xl font-black text-white mt-1">{bookings.length + 42} Completed</h3>
+                <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
+                  {bookings.filter(b => b.status === 'completed').length} Completed
+                </h3>
                 <span className="text-[9px] text-cyan-400 font-bold block mt-2">Active live dispatch runs</span>
               </div>
 
@@ -757,7 +767,7 @@ export const AdminView: React.FC = () => {
                 <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
                   {partners.filter(p => p.isOnline).length} / {partners.length}
                 </h3>
-                <span className="text-[9px] text-emerald-450 font-bold block mt-2">● Systems operational</span>
+                <span className="text-[9px] text-emerald-400 font-bold block mt-2">● Systems operational</span>
               </div>
             </div>
 

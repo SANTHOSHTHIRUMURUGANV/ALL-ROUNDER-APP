@@ -561,8 +561,8 @@ export const PartnerView: React.FC = () => {
     const activeJobs = ourJobs.filter(b => b.status === 'accepted' || b.status === 'ongoing');
     const completedJobs = ourJobs.filter(b => b.status === 'completed');
 
-    const completedTotal = completedJobs.length + (activePartner.completedJobs || 0);
-    const earningsVal = completedJobs.reduce((sum, b) => sum + b.price, 0) + (activePartner.completedJobs ? 1250 : 0);
+    const completedTotal = completedJobs.length;
+    const earningsVal = completedJobs.reduce((sum, b) => sum + b.price, 0);
 
     const displayRating = activePartner.reviewsCount > 0 ? activePartner.rating : (completedJobs.length > 0 ? 5.0 : 0.0);
     const displayReviews = activePartner.reviewsCount > 0 ? activePartner.reviewsCount : completedJobs.length;
@@ -644,8 +644,8 @@ export const PartnerView: React.FC = () => {
           <div className="rounded-3xl bg-slate-900 border border-white/5 p-6 shadow-md">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{t('completedJobsLabel')}</span>
             <h3 className="text-2xl font-black text-white mt-1">{completedTotal} Tasks</h3>
-            <span className="text-[9px] text-emerald-400 font-bold block mt-2 animate-pulse">
-              ▲ 14.5% versus last week
+            <span className="text-[9px] text-cyan-400 font-bold block mt-2">
+              All-time completed jobs
             </span>
           </div>
 
