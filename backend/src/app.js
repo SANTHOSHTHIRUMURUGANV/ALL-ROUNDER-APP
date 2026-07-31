@@ -3,6 +3,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import connectDB from './config/database.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 
@@ -40,8 +42,18 @@ connectDB().then(() => {
 });
 
 // Middleware
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again after 15 minutes.'
+});
+app.use('/api/', limiter);
 
 // Pass Socket.io to request contexts
 app.use((req, res, next) => {
