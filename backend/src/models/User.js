@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, default: '' },
   password: { type: String, default: '' },
   role: { type: String, enum: ['customer', 'partner', 'admin', 'blocked'], default: 'customer' },
-  walletBalance: { type: Number, default: 1000 },
+  walletBalance: { type: Number, default: 0 },
   address: { type: String, default: 'Velachery Main Road' },
   profileImage: { type: String, default: '' },
   location: {

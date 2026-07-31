@@ -134,7 +134,7 @@ async function seedDatabase() {
         name: 'Suresh Kumar',
         email: 'suresh@allrounder.com',
         role: 'customer',
-        walletBalance: 1250
+        walletBalance: 0
       });
 
       // Seed initial coupons

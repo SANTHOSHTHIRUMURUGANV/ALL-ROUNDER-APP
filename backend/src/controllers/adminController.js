@@ -166,7 +166,7 @@ export const getUsers = async (req, res, next) => {
   try {
     if (mongoose.connection.readyState !== 1) {
       return res.status(200).json([
-        { id: 'mock-u-123', _id: 'mock-u-123', uid: 'mock-user-123', name: 'Suresh Kumar', email: 'suresh@allrounder.com', phone: '+91 99999 88888', role: 'customer', walletBalance: 1250, isBlocked: false, createdAt: new Date() },
+        { id: 'mock-u-123', _id: 'mock-u-123', uid: 'mock-user-123', name: 'Suresh Kumar', email: 'suresh@allrounder.com', phone: '+91 99999 88888', role: 'customer', walletBalance: 0, isBlocked: false, createdAt: new Date() },
         { id: 'mock-admin-123', _id: 'mock-admin-123', uid: 'admin-mock-123', name: 'Admin Account', email: 'admin@allrounder.com', phone: '+91 99999 00000', role: 'admin', walletBalance: 99999, isBlocked: false, createdAt: new Date() }
       ]);
     }

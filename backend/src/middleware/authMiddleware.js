@@ -10,7 +10,7 @@ export const protect = async (req, res, next) => {
       name: 'Suresh Kumar',
       email: 'suresh@allrounder.com',
       role: 'customer',
-      walletBalance: 1250,
+      walletBalance: 0,
       location: {
         lat: 12.9815,
         lng: 80.2180,
