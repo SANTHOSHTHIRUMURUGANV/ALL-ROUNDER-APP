@@ -11,7 +11,7 @@ export const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/allrounder', {
       serverSelectionTimeoutMS: 2000 // fail fast after 2 seconds
     });
-    console.log(`📡 MongoDB connected: ${conn.connection.host}`);
+    console.log("✅ MongoDB Connected");
   } catch (error) {
     console.warn(`⚠️ Database connection warning: ${error.message}. Continuing in sandbox server database mode.`);
   }
