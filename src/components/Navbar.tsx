@@ -109,7 +109,15 @@ export const Navbar: React.FC = () => {
         {/* Center Mode Switcher */}
         <div className="hidden md:flex items-center space-x-1.5 rounded-2xl bg-slate-900/80 p-1 border border-white/5">
           <button
-            onClick={() => setRole('customer')}
+            onClick={() => {
+              if (role === 'admin') {
+                sessionStorage.removeItem('adminToken');
+                sessionStorage.removeItem('adminEmail');
+              }
+              setRole('customer');
+              window.history.pushState(null, '', '/');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
             className={`flex items-center space-x-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
               role === 'customer'
                 ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white shadow-lg'
@@ -121,7 +129,15 @@ export const Navbar: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setRole('partner')}
+            onClick={() => {
+              if (role === 'admin') {
+                sessionStorage.removeItem('adminToken');
+                sessionStorage.removeItem('adminEmail');
+              }
+              setRole('partner');
+              window.history.pushState(null, '', '/');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
             className={`flex items-center space-x-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
               role === 'partner'
                 ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white shadow-lg'
@@ -133,7 +149,15 @@ export const Navbar: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setRole('admin')}
+            onClick={() => {
+              if (sessionStorage.getItem('adminToken')) {
+                setRole('admin');
+                window.history.pushState(null, '', '/admin/dashboard');
+              } else {
+                window.history.pushState(null, '', '/admin/login');
+              }
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
             className={`flex items-center space-x-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
               role === 'admin'
                 ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white shadow-lg'

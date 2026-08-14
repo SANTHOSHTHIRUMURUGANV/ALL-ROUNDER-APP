@@ -18,6 +18,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import adminAuthRoutes from './routes/adminAuthRoutes.js';
 
 // Import Models for seed
 import { User } from './models/User.js';
@@ -37,8 +38,10 @@ const io = new Server(server, {
 });
 
 // Database Connectivity
-connectDB().then(() => {
-  seedDatabase();
+connectDB().then((isConnected) => {
+  if (isConnected) {
+    seedDatabase();
+  }
 });
 
 // Middleware
@@ -62,6 +65,7 @@ app.use((req, res, next) => {
 });
 
 // Bind API Routes
+app.use('/api/auth/admin', adminAuthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/bookings', bookingRoutes);

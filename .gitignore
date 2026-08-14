@@ -21,4 +21,9 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+# Custom Environment Files
+.env
+.env.local
+.env.*
+*.log
+otp-debug.log

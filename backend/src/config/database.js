@@ -5,15 +5,16 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
-    // Disable commands buffering so calls don't freeze when Atlas is offline
-    mongoose.set('bufferCommands', false);
+    mongoose.set('bufferCommands', true);
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/allrounder', {
       serverSelectionTimeoutMS: 2000
     });
     console.log("✅ MongoDB Connected Successfully");
+    return true;
   } catch (error) {
     console.log("❌ MongoDB Connection Failed");
     console.warn(`⚠️ Database connection warning: ${error.message}`);
+    return false;
   }
 };
 
