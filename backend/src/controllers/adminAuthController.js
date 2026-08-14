@@ -49,22 +49,18 @@ const deliverOtp = async (email, otp) => {
 
 export const loginAdmin = async (req, res, next) => {
   try {
-    const { userNumber, password, email } = req.body;
+    const { userNumber, password, email } = req.body || {};
 
     if (!userNumber || !password || !email) {
-      return res.status(400).json({ message: 'User Number, Password, and Admin Email are required.' });
+      return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
     const envUserNumber = (process.env.ADMIN_USER_NUMBER || '7774 5180 7169').replace(/\s+/g, '');
-    const reqUserNumber = userNumber.replace(/\s+/g, '');
+    const reqUserNumber = String(userNumber).replace(/\s+/g, '');
     const envPassword = process.env.ADMIN_PASSWORD || 'Sanzsandy2005***';
 
-    if (reqUserNumber !== envUserNumber || password !== envPassword) {
-      return res.status(401).json({ message: 'Invalid Admin User Number or Password credentials.' });
-    }
-
-    if (!isApprovedEmail(email)) {
-      return res.status(403).json({ message: 'Email address is not an approved Administrator account.' });
+    if (reqUserNumber !== envUserNumber || password !== envPassword || !isApprovedEmail(email)) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
     // Generate secure 6-digit OTP

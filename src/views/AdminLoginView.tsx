@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { apiRequest } from '../utils/api';
-import { Lock, UserCheck, AlertTriangle } from 'lucide-react';
+import { Lock, Eye, EyeOff, AlertTriangle, Mail } from 'lucide-react';
 
 interface AdminLoginViewProps {
   onLoginSuccess: (email: string) => void;
@@ -9,7 +9,9 @@ interface AdminLoginViewProps {
 export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }) => {
   const [userNumber, setUserNumber] = useState('');
   const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('vincyvincilin@gmail.com');
+  const [email, setEmail] = useState('');
+  const [showUserNumber, setShowUserNumber] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,21 +39,21 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
     try {
       const formattedNum = userNumber.replace(/\s+/g, '');
       if (formattedNum.length !== 12) {
-        throw new Error('Admin User Number must be exactly 12 digits.');
+        throw new Error('Invalid credentials.');
       }
 
       const res = await apiRequest('/auth/admin/login', {
         method: 'POST',
-        body: JSON.stringify({ userNumber: formattedNum, password, email })
+        body: JSON.stringify({ userNumber: formattedNum, password, email: email.trim() })
       });
 
       if (res.success) {
-        onLoginSuccess(email);
+        onLoginSuccess(email.trim());
       } else {
-        setError(res.message || 'Login failed. Please check credentials.');
+        setError(res.message || 'Invalid credentials.');
       }
     } catch (err: any) {
-      setError(err.message || 'Server error. Please try again.');
+      setError(err.message || 'Invalid credentials.');
     } finally {
       setLoading(false);
     }
@@ -85,14 +87,20 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
             <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Admin User Number</label>
             <div className="relative">
               <input
-                type="text"
-                placeholder="7774 5180 7169"
+                type={showUserNumber ? "text" : "password"}
+                placeholder="•••• •••• ••••"
                 value={userNumber}
                 onChange={handleUserNumberChange}
                 required
-                className="w-full bg-slate-900/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white placeholder-slate-650 outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/40 transition"
+                className="w-full bg-slate-900/50 border border-white/5 rounded-2xl pl-4 pr-11 py-3 text-sm text-white placeholder-slate-650 outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/40 transition"
               />
-              <UserCheck className="absolute right-4 top-3.5 h-4 w-4 text-slate-500" />
+              <button
+                type="button"
+                onClick={() => setShowUserNumber(!showUserNumber)}
+                className="absolute right-4 top-3.5 text-slate-500 hover:text-slate-300 transition"
+              >
+                {showUserNumber ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
 
@@ -101,28 +109,37 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
             <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Password</label>
             <div className="relative">
               <input
-                type="password"
-                placeholder="••••••••••••••"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
-                className="w-full bg-slate-900/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white placeholder-slate-650 outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/40 transition"
+                className="w-full bg-slate-900/50 border border-white/5 rounded-2xl pl-4 pr-11 py-3 text-sm text-white placeholder-slate-650 outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/40 transition"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-3.5 text-slate-500 hover:text-slate-300 transition"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
 
-          {/* Email Select */}
+          {/* Verification Email Input */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Verification Email</label>
-            <select
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full bg-slate-900/50 border border-white/5 rounded-2xl px-4 py-3 text-sm text-white outline-none focus:border-cyan-500/40 transition cursor-pointer"
-            >
-              <option value="vincyvincilin@gmail.com" className="bg-slate-950">vincyvincilin@gmail.com</option>
-              <option value="vijayanvijayank006@gmail.com" className="bg-slate-950">vijayanvijayank006@gmail.com</option>
-              <option value="thirunavukarasu.s.ds@gmail.com" className="bg-slate-950">thirunavukarasu.s.ds@gmail.com</option>
-            </select>
+            <div className="relative">
+              <input
+                type="email"
+                placeholder="Enter authorized email address"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="w-full bg-slate-900/50 border border-white/5 rounded-2xl pl-4 pr-11 py-3 text-sm text-white placeholder-slate-650 outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/40 transition"
+              />
+              <Mail className="absolute right-4 top-3.5 h-4 w-4 text-slate-500" />
+            </div>
           </div>
 
           {/* Submit */}
