@@ -6,91 +6,175 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-const DoraemonAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg'; isSpinning?: boolean }> = ({ size = 'md', isSpinning = true }) => {
+const DoraemonAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg'; isSpinning?: boolean; mode?: 'head' | 'full' }> = ({ 
+  size = 'md', 
+  isSpinning = true,
+  mode = 'head'
+}) => {
   const isSm = size === 'sm';
   const isLg = size === 'lg';
 
-  // Dimensions
-  const headSize = isSm ? 'h-9 w-9' : isLg ? 'h-20 w-20' : 'h-14 w-14';
-  const shaftHeight = isSm ? 'h-2' : isLg ? 'h-4.5' : 'h-3.5';
-  const propellerWidth = isSm ? 'w-8' : isLg ? 'w-18' : 'w-14';
-  const propellerHeight = isSm ? 'h-2' : isLg ? 'h-5' : 'h-4';
+  if (mode === 'head') {
+    const headSize = isSm ? 'h-9 w-9' : isLg ? 'h-20 w-20' : 'h-14 w-14';
+    const shaftHeight = isSm ? 'h-2' : isLg ? 'h-4.5' : 'h-3.5';
+    const propellerSize = isSm ? 32 : isLg ? 76 : 52;
 
+    return (
+      <div className="relative flex flex-col items-center select-none shrink-0 group">
+        <div className="absolute -top-7 flex flex-col items-center z-20">
+          <div
+            className="relative flex items-center justify-center rounded-full border border-slate-300/80 bg-[radial-gradient(circle_at_center,#fff_10%,#e5e7eb_55%,#b7c2cd_100%)] shadow-[0_8px_16px_rgba(0,0,0,0.18)]"
+            style={{
+              width: propellerSize,
+              height: propellerSize,
+              transform: 'rotateX(68deg) rotateY(12deg)',
+              transformStyle: 'preserve-3d',
+              perspective: '200px',
+            }}
+          >
+            <div
+              className={`absolute inset-0 rounded-full ${isSpinning ? 'animate-[spin_0.5s_linear_infinite]' : ''}`}
+              style={{
+                background: 'conic-gradient(from 0deg, rgba(255,255,255,0.9) 0deg, rgba(148,163,184,0.25) 55deg, rgba(255,255,255,0.8) 180deg, rgba(148,163,184,0.3) 290deg, rgba(255,255,255,0.9) 360deg)',
+              }}
+            />
+            {[0, 90, 180, 270].map((angle) => (
+              <span
+                key={angle}
+                className="absolute left-1/2 top-1/2 h-[55%] w-[18%] rounded-full bg-[linear-gradient(180deg,#ffffff_0%,#dfe7ee_100%)] shadow-[inset_0_2px_4px_rgba(148,163,184,0.5)] border border-slate-300/70"
+                style={{
+                  transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-10px)`,
+                  transformOrigin: 'center center',
+                }}
+              />
+            ))}
+            <div className="absolute h-3 w-3 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fef9c3_0%,#facc15_45%,#b45309_100%)] border border-yellow-355 shadow-[0_2px_6px_rgba(0,0,0,0.2)]" />
+          </div>
+
+          <div className={`w-[2.5px] bg-gradient-to-b from-yellow-300 via-yellow-500 to-yellow-600 shadow-sm ${shaftHeight}`} />
+          <div className="h-1 w-2.5 rounded-full bg-yellow-600 mt-[-1px] border border-black/10 shadow-sm" />
+        </div>
+
+        <div className={`relative rounded-[44%] bg-[radial-gradient(circle_at_35%_35%,#00b8ff_0%,#1ba4de_52%,#005d8e_100%)] border border-black/20 flex items-center justify-center overflow-hidden shadow-[0_14px_22px_rgba(0,0,0,0.24),inset_0_-10px_12px_rgba(0,0,0,0.18)] ${headSize}`}>
+          <div className="absolute bottom-[2%] w-[88%] h-[82%] rounded-[45%] bg-[radial-gradient(circle_at_40%_30%,#ffffff_60%,#eef3f8_90%,#dfe6ef_100%)] border border-black/5 flex flex-col items-center pt-[6%] shadow-[inset_0_-3px_5px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.15)]">
+            <div className="flex gap-[0.5px] justify-center z-15">
+              <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative shadow-[0_0.5px_1px_rgba(0,0,0,0.1)]">
+                <div className="h-2 w-1.5 bg-slate-900 rounded-full absolute bottom-1 left-[3px] flex items-center justify-center">
+                  <div className="h-0.5 w-0.5 bg-white rounded-full absolute top-[1px]" />
+                </div>
+              </div>
+              <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative shadow-[0_0.5px_1px_rgba(0,0,0,0.1)]">
+                <svg className="w-full h-full absolute inset-0 text-slate-800" viewBox="0 0 14 18" fill="none">
+                  <path d="M2.5 9.5C3.5 7.5 7.5 7.5 8.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="h-3 w-3 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ff4d4d_0%,#e60012_70%,#80000a_100%)] mt-[-2px] z-20 shadow-md relative flex items-center justify-center">
+              <div className="absolute top-[1.5px] left-[1.5px] h-[2.5px] w-[2.5px] rounded-full bg-white/90" />
+            </div>
+
+            {!isSm && (
+              <>
+                <div className="absolute top-[52%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
+                <div className="absolute top-[58%] left-1 w-4 h-[1px] bg-slate-900/60 rounded" />
+                <div className="absolute top-[64%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
+
+                <div className="absolute top-[52%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
+                <div className="absolute top-[58%] right-1 w-4 h-[1px] bg-slate-900/60 rounded" />
+                <div className="absolute top-[64%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
+              </>
+            )}
+
+            {!isSm ? (
+              <div className="w-[28px] h-[16px] bg-[#990000] border border-black/10 rounded-b-full mt-[1px] relative overflow-hidden flex flex-col items-center shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.5)] z-10">
+                <div className="absolute bottom-[-1px] w-[22px] h-[9px] bg-[radial-gradient(circle_at_50%_0%,#ff8080_0%,#e60012_90%)] rounded-full border-t border-red-300 shadow-sm" />
+              </div>
+            ) : (
+              <div className="w-4 h-2 border-b-2 border-slate-700 rounded-b-full mt-[1px] z-10" />
+            )}
+          </div>
+
+          <div className="absolute bottom-0 w-full h-[14%] bg-gradient-to-r from-red-600 to-[#e60012] flex items-center justify-center z-30 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)]">
+            <div className="h-3.5 w-3.5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fff176_0%,#fbc02d_65%,#f57f17_100%)] border border-black/20 flex flex-col items-center justify-start pt-[1px] relative shadow-md">
+              <div className="absolute top-[1px] left-[1px] h-[1px] w-[1px] bg-white rounded-full" />
+              <div className="w-1.5 h-1 rounded-full bg-slate-900 flex items-center justify-center mt-[1px]">
+                <div className="w-[1px] h-1.5 bg-slate-900 mt-1" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Renders the FULL-BODY flying winking Doraemon
   return (
-    <div className="relative flex flex-col items-center select-none shrink-0 group">
+    <div className="relative flex flex-col items-center select-none shrink-0 group w-20 h-28 hover:scale-105 transition-transform">
       {/* 3D Take-Copter */}
-      <div className="absolute -top-3.5 flex flex-col items-center z-20">
-        {/* Propeller Blade in 3D Perspective */}
-        <div 
-          className="relative border border-slate-350 bg-[radial-gradient(ellipse_at_center,#ffffff_30%,#e2e8f0_90%)] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] flex items-center justify-center"
+      <div className="absolute top-0 flex flex-col items-center z-30">
+        <div
+          className="relative flex items-center justify-center rounded-full border border-slate-350 bg-[radial-gradient(ellipse_at_center,#ffffff_30%,#e2e8f0_90%)] shadow-[0_1px_3px_rgba(0,0,0,0.15)]"
           style={{
-            width: propellerWidth,
-            height: propellerHeight,
+            width: 48,
+            height: 48,
+            transform: 'rotateX(68deg) rotateY(12deg)',
             transformStyle: 'preserve-3d',
-            perspective: '150px',
-            transform: 'rotateX(75deg) rotateY(3deg)',
+            perspective: '200px',
           }}
         >
-          {/* Internal rotating blades to show motion */}
-          <div 
-            className={`w-full h-full rounded-full border border-dashed border-slate-400/80 ${isSpinning ? 'animate-[spin_0.2s_linear_infinite]' : ''}`} 
+          <div
+            className={`absolute inset-0 rounded-full ${isSpinning ? 'animate-[spin_0.5s_linear_infinite]' : ''}`}
+            style={{
+              background: 'conic-gradient(from 0deg, rgba(255,255,255,0.9) 0deg, rgba(148,163,184,0.25) 55deg, rgba(255,255,255,0.8) 180deg, rgba(148,163,184,0.3) 290deg, rgba(255,255,255,0.9) 360deg)',
+            }}
           />
+          {[0, 90, 180, 270].map((angle) => (
+            <span
+              key={angle}
+              className="absolute left-1/2 top-1/2 h-[55%] w-[18%] rounded-full bg-[linear-gradient(180deg,#ffffff_0%,#dfe7ee_100%)] shadow-[inset_0_2px_4px_rgba(148,163,184,0.5)] border border-slate-300/70"
+              style={{
+                transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-10px)`,
+                transformOrigin: 'center center',
+              }}
+            />
+          ))}
+          <div className="absolute h-3 w-3 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fef9c3_0%,#facc15_45%,#b45309_100%)] border border-yellow-300" />
         </div>
-        
-        {/* Connection Shaft */}
-        <div className={`w-[2.5px] bg-gradient-to-b from-yellow-300 via-yellow-500 to-yellow-600 shadow-sm ${shaftHeight}`} />
-        
-        {/* Suction Cup Base */}
+
+        <div className="w-[2.5px] h-4.5 bg-gradient-to-b from-yellow-300 via-yellow-500 to-yellow-600 shadow-sm" />
         <div className="h-1 w-2.5 rounded-full bg-yellow-600 mt-[-1px] border border-black/10 shadow-sm" />
       </div>
 
-      {/* Doraemon Head with 3D Spherical Radial Gradient */}
-      <div className={`relative rounded-full bg-[radial-gradient(circle_at_35%_35%,#00b0ff_0%,#009fe3_50%,#005b8a_100%)] border border-black/25 flex items-center justify-center overflow-hidden shadow-[0_3px_8px_rgba(0,0,0,0.3),inset_0_-2px_4px_rgba(0,0,0,0.4)] ${headSize}`}>
-        
-        {/* White Face insert with 3D Spherical Radial Gradient */}
-        <div className="absolute bottom-[2%] w-[88%] h-[82%] rounded-full bg-[radial-gradient(circle_at_40%_30%,#ffffff_60%,#f1f5f9_90%,#cbd5e1_100%)] border border-black/5 flex flex-col items-center pt-[6%] shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.15)]">
-          
-          {/* Eyes Group */}
+      {/* Head */}
+      <div className="absolute top-4 w-16 h-16 rounded-[44%] bg-[radial-gradient(circle_at_35%_35%,#00b8ff_0%,#1ba4de_52%,#005d8e_100%)] border border-black/20 flex items-center justify-center overflow-hidden shadow-[0_4px_8px_rgba(0,0,0,0.2),inset_0_-4px_6px_rgba(0,0,0,0.18)] z-20">
+        <div className="absolute bottom-[2%] w-[88%] h-[82%] rounded-[45%] bg-[radial-gradient(circle_at_40%_30%,#ffffff_60%,#eef3f8_90%,#dfe6ef_100%)] border border-black/5 flex flex-col items-center pt-[6%] shadow-[inset_0_-2px_4px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.15)]">
           <div className="flex gap-[0.5px] justify-center z-15">
-            {/* Left Eye: Open and looking happy */}
-            <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative shadow-[0_0.5px_1px_rgba(0,0,0,0.1)]">
+            <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative">
               <div className="h-2 w-1.5 bg-slate-900 rounded-full absolute bottom-1 left-[3px] flex items-center justify-center">
-                {/* White eye highlight */}
                 <div className="h-0.5 w-0.5 bg-white rounded-full absolute top-[1px]" />
               </div>
             </div>
-            {/* Right Eye: Winking */}
             <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative shadow-[0_0.5px_1px_rgba(0,0,0,0.1)]">
-              {/* Wink Path (Arc) */}
               <svg className="w-full h-full absolute inset-0 text-slate-800" viewBox="0 0 14 18" fill="none">
                 <path d="M2.5 9.5C3.5 7.5 7.5 7.5 8.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
           </div>
 
-          {/* 3D Nose with spherical gradient & highlight reflection dot */}
           <div className="h-3 w-3 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ff4d4d_0%,#e60012_70%,#80000a_100%)] mt-[-2px] z-20 shadow-md relative flex items-center justify-center">
-            {/* Nose reflection highlight */}
             <div className="absolute top-[1.5px] left-[1.5px] h-[2.5px] w-[2.5px] rounded-full bg-white/90" />
           </div>
+          <div className="absolute top-[52%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
+          <div className="absolute top-[58%] left-1 w-4 h-[1px] bg-slate-900/60 rounded" />
+          <div className="absolute top-[64%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
 
-          {/* 3D Whiskers */}
-          {!isSm && (
-            <>
-              <div className="absolute top-[52%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
-              <div className="absolute top-[58%] left-1 w-4 h-[1px] bg-slate-900/60 rounded" />
-              <div className="absolute top-[64%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
+          <div className="absolute top-[52%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
+          <div className="absolute top-[58%] right-1 w-4 h-[1px] bg-slate-900/60 rounded" />
+          <div className="absolute top-[64%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
 
-              <div className="absolute top-[52%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
-              <div className="absolute top-[58%] right-1 w-4 h-[1px] bg-slate-900/60 rounded" />
-              <div className="absolute top-[64%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
-            </>
-          )}
-
-          {/* Wide Open 3D Mouth (Happy Smile) */}
           {!isSm ? (
             <div className="w-[28px] h-[16px] bg-[#990000] border border-black/10 rounded-b-full mt-[1px] relative overflow-hidden flex flex-col items-center shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.5)] z-10">
-              {/* Tongue */}
               <div className="absolute bottom-[-1px] w-[22px] h-[9px] bg-[radial-gradient(circle_at_50%_0%,#ff8080_0%,#e60012_90%)] rounded-full border-t border-red-300 shadow-sm" />
             </div>
           ) : (
@@ -98,18 +182,40 @@ const DoraemonAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg'; isSpinning?: boolean
           )}
         </div>
 
-        {/* Collar & Golden Bell */}
         <div className="absolute bottom-0 w-full h-[14%] bg-gradient-to-r from-red-600 to-[#e60012] flex items-center justify-center z-30 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)]">
-          {/* Bell with 3D spherical yellow gradient */}
           <div className="h-3.5 w-3.5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fff176_0%,#fbc02d_65%,#f57f17_100%)] border border-black/20 flex flex-col items-center justify-start pt-[1px] relative shadow-md">
-            {/* Bell eye highlight */}
             <div className="absolute top-[1px] left-[1px] h-[1px] w-[1px] bg-white rounded-full" />
-            {/* Bell slit line */}
             <div className="w-1.5 h-1 rounded-full bg-slate-900 flex items-center justify-center mt-[1px]">
               <div className="w-[1px] h-1.5 bg-slate-900 mt-1" />
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Waving Left Arm */}
+      <div className="absolute left-[-4px] top-[74px] w-4.5 h-7 rounded-full bg-[#009fe3] border border-black/15 shadow-sm -rotate-45 origin-bottom z-15 flex items-start justify-center">
+        <div className="w-4.5 h-4.5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff_60%,#e2e8f0_100%)] border border-slate-300 shadow-md absolute -top-2.5" />
+      </div>
+
+      {/* Torso Body */}
+      <div className="absolute top-[72px] w-12 h-12 rounded-full bg-[radial-gradient(circle_at_35%_35%,#00b8ff_0%,#009fe3_60%,#005d8e_100%)] border border-black/20 flex items-center justify-center z-10 shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+        <div className="absolute bottom-[3px] w-[75%] h-[68%] rounded-full bg-white flex flex-col items-center justify-center border border-black/5 shadow-inner">
+          <div className="w-[24px] h-[12px] border-b border-l border-r border-slate-400 rounded-b-full mt-2" />
+        </div>
+      </div>
+
+      {/* Right Arm */}
+      <div className="absolute right-[-4px] top-[78px] w-4.5 h-7 rounded-full bg-[#009fe3] border border-black/15 shadow-sm rotate-[35deg] origin-top z-15 flex items-end justify-center">
+        <div className="w-4.5 h-4.5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff_60%,#e2e8f0_100%)] border border-slate-300 shadow-md absolute -bottom-2.5" />
+      </div>
+
+      {/* Tail */}
+      <div className="absolute bottom-8 right-2 w-4 h-4 rounded-full bg-[#e60012] border border-black/10 shadow-sm z-5 animate-pulse" />
+
+      {/* Feet */}
+      <div className="absolute bottom-2.5 flex gap-[1px] justify-center w-full z-15">
+        <div className="w-6 h-5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff_60%,#e2e8f0_100%)] border border-slate-300 shadow-md" />
+        <div className="w-6 h-5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff_60%,#e2e8f0_100%)] border border-slate-300 shadow-md" />
       </div>
     </div>
   );
@@ -537,10 +643,10 @@ export const AIChatbot: React.FC = () => {
       {/* Floating button trigger */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="h-16 w-16 rounded-full bg-gradient-to-tr from-cyan-400/20 to-indigo-500/20 shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50 hover:shadow-cyan-500/30 relative border border-white/10 group cursor-pointer backdrop-blur"
+        className="transition-all hover:scale-110 active:scale-95 z-50 relative group cursor-pointer filter drop-shadow-[0_8px_16px_rgba(0,160,233,0.35)]"
       >
-        <DoraemonAvatar size="lg" isSpinning={true} />
-        <span className="absolute -top-1 -left-1 flex h-3 w-3">
+        <DoraemonAvatar mode="full" isSpinning={true} />
+        <span className="absolute top-2 left-2 flex h-3 w-3">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-400"></span>
         </span>
