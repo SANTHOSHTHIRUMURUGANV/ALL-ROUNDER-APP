@@ -9,57 +9,105 @@ import confetti from 'canvas-confetti';
 const DoraemonAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg'; isSpinning?: boolean }> = ({ size = 'md', isSpinning = true }) => {
   const isSm = size === 'sm';
   const isLg = size === 'lg';
-  const headSize = isSm ? 'h-8 w-8' : isLg ? 'h-14 w-14' : 'h-12 w-12';
-  const propWidth = isSm ? 'w-6' : isLg ? 'w-10' : 'w-8';
-  const shaftHeight = isSm ? 'h-1.5' : isLg ? 'h-2.5' : 'h-2';
+
+  // Dimensions
+  const headSize = isSm ? 'h-9 w-9' : isLg ? 'h-20 w-20' : 'h-14 w-14';
+  const shaftHeight = isSm ? 'h-2' : isLg ? 'h-4.5' : 'h-3.5';
+  const propellerWidth = isSm ? 'w-8' : isLg ? 'w-18' : 'w-14';
+  const propellerHeight = isSm ? 'h-2' : isLg ? 'h-5' : 'h-4';
 
   return (
-    <div className="relative flex flex-col items-center select-none shrink-0">
-      {/* Take-copter (Bamboo Propeller) */}
-      <div className="absolute -top-3 flex flex-col items-center z-10 group-hover:scale-110 transition-transform">
-        {/* Propeller blade */}
-        <div className={`h-[3px] ${propWidth} bg-yellow-400 rounded-full border border-black/10 shadow-sm ${isSpinning ? 'animate-[spin_0.4s_linear_infinite]' : ''}`} />
-        {/* Connection shaft */}
-        <div className={`${shaftHeight} w-0.5 bg-slate-300`} />
+    <div className="relative flex flex-col items-center select-none shrink-0 group">
+      {/* 3D Take-Copter */}
+      <div className="absolute -top-3.5 flex flex-col items-center z-20">
+        {/* Propeller Blade in 3D Perspective */}
+        <div 
+          className="relative border border-slate-350 bg-[radial-gradient(ellipse_at_center,#ffffff_30%,#e2e8f0_90%)] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] flex items-center justify-center"
+          style={{
+            width: propellerWidth,
+            height: propellerHeight,
+            transformStyle: 'preserve-3d',
+            perspective: '150px',
+            transform: 'rotateX(75deg) rotateY(3deg)',
+          }}
+        >
+          {/* Internal rotating blades to show motion */}
+          <div 
+            className={`w-full h-full rounded-full border border-dashed border-slate-400/80 ${isSpinning ? 'animate-[spin_0.2s_linear_infinite]' : ''}`} 
+          />
+        </div>
+        
+        {/* Connection Shaft */}
+        <div className={`w-[2.5px] bg-gradient-to-b from-yellow-300 via-yellow-500 to-yellow-600 shadow-sm ${shaftHeight}`} />
+        
+        {/* Suction Cup Base */}
+        <div className="h-1 w-2.5 rounded-full bg-yellow-600 mt-[-1px] border border-black/10 shadow-sm" />
       </div>
 
-      {/* Doraemon Face Frame */}
-      <div className={`relative rounded-full bg-[#009fe3] border border-white/10 flex items-center justify-center overflow-hidden shadow-lg ${headSize}`}>
-        {/* White face panel */}
-        <div className="absolute bottom-0 w-[86%] h-[78%] rounded-full bg-white flex flex-col items-center pt-[5%]">
-          {/* Eyes */}
-          <div className="flex gap-[1px] justify-center z-10">
-            {/* Left eye */}
-            <div className="h-3 w-2.5 bg-white border border-slate-300 rounded-full flex items-center justify-center relative">
-              <div className="h-1.5 w-1 bg-slate-900 rounded-full absolute bottom-0.5 left-[2px]" />
+      {/* Doraemon Head with 3D Spherical Radial Gradient */}
+      <div className={`relative rounded-full bg-[radial-gradient(circle_at_35%_35%,#00b0ff_0%,#009fe3_50%,#005b8a_100%)] border border-black/25 flex items-center justify-center overflow-hidden shadow-[0_3px_8px_rgba(0,0,0,0.3),inset_0_-2px_4px_rgba(0,0,0,0.4)] ${headSize}`}>
+        
+        {/* White Face insert with 3D Spherical Radial Gradient */}
+        <div className="absolute bottom-[2%] w-[88%] h-[82%] rounded-full bg-[radial-gradient(circle_at_40%_30%,#ffffff_60%,#f1f5f9_90%,#cbd5e1_100%)] border border-black/5 flex flex-col items-center pt-[6%] shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.15)]">
+          
+          {/* Eyes Group */}
+          <div className="flex gap-[0.5px] justify-center z-15">
+            {/* Left Eye: Open and looking happy */}
+            <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative shadow-[0_0.5px_1px_rgba(0,0,0,0.1)]">
+              <div className="h-2 w-1.5 bg-slate-900 rounded-full absolute bottom-1 left-[3px] flex items-center justify-center">
+                {/* White eye highlight */}
+                <div className="h-0.5 w-0.5 bg-white rounded-full absolute top-[1px]" />
+              </div>
             </div>
-            {/* Right eye */}
-            <div className="h-3 w-2.5 bg-white border border-slate-300 rounded-full flex items-center justify-center relative">
-              <div className="h-1.5 w-1 bg-slate-900 rounded-full absolute bottom-0.5 right-[2px]" />
+            {/* Right Eye: Winking */}
+            <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative shadow-[0_0.5px_1px_rgba(0,0,0,0.1)]">
+              {/* Wink Path (Arc) */}
+              <svg className="w-full h-full absolute inset-0 text-slate-800" viewBox="0 0 14 18" fill="none">
+                <path d="M2.5 9.5C3.5 7.5 7.5 7.5 8.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
             </div>
           </div>
 
-          {/* Red nose */}
-          <div className="h-2 w-2 rounded-full bg-[#e60012] border border-white/20 mt-[-2px] z-10 shadow-sm" />
+          {/* 3D Nose with spherical gradient & highlight reflection dot */}
+          <div className="h-3 w-3 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ff4d4d_0%,#e60012_70%,#80000a_100%)] mt-[-2px] z-20 shadow-md relative flex items-center justify-center">
+            {/* Nose reflection highlight */}
+            <div className="absolute top-[1.5px] left-[1.5px] h-[2.5px] w-[2.5px] rounded-full bg-white/90" />
+          </div>
 
-          {/* Whiskers */}
-          <div className="absolute top-[52%] left-1.5 w-2 h-[1px] bg-slate-900/60 rotate-12" />
-          <div className="absolute top-[58%] left-1 w-2.5 h-[1px] bg-slate-900/60" />
-          <div className="absolute top-[64%] left-1.5 w-2 h-[1px] bg-slate-900/60 -rotate-12" />
+          {/* 3D Whiskers */}
+          {!isSm && (
+            <>
+              <div className="absolute top-[52%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
+              <div className="absolute top-[58%] left-1 w-4 h-[1px] bg-slate-900/60 rounded" />
+              <div className="absolute top-[64%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
 
-          <div className="absolute top-[52%] right-1.5 w-2 h-[1px] bg-slate-900/60 -rotate-12" />
-          <div className="absolute top-[58%] right-1 w-2.5 h-[1px] bg-slate-900/60" />
-          <div className="absolute top-[64%] right-1.5 w-2 h-[1px] bg-slate-900/60 rotate-12" />
+              <div className="absolute top-[52%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
+              <div className="absolute top-[58%] right-1 w-4 h-[1px] bg-slate-900/60 rounded" />
+              <div className="absolute top-[64%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
+            </>
+          )}
 
-          {/* Smile */}
-          <div className="w-5 h-2.5 border-b border-slate-700 rounded-b-full mt-[-2px]" />
+          {/* Wide Open 3D Mouth (Happy Smile) */}
+          {!isSm ? (
+            <div className="w-[28px] h-[16px] bg-[#990000] border border-black/10 rounded-b-full mt-[1px] relative overflow-hidden flex flex-col items-center shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.5)] z-10">
+              {/* Tongue */}
+              <div className="absolute bottom-[-1px] w-[22px] h-[9px] bg-[radial-gradient(circle_at_50%_0%,#ff8080_0%,#e60012_90%)] rounded-full border-t border-red-300 shadow-sm" />
+            </div>
+          ) : (
+            <div className="w-4 h-2 border-b-2 border-slate-700 rounded-b-full mt-[1px] z-10" />
+          )}
         </div>
 
-        {/* Collar & Bell */}
-        <div className="absolute bottom-0 w-full h-[15%] bg-[#e60012] flex items-center justify-center z-20">
-          {/* Yellow Bell */}
-          <div className="h-2.5 w-2.5 rounded-full bg-[#f9c000] border border-black/10 flex items-center justify-center">
-            <div className="h-1 w-[1px] bg-slate-800 absolute bottom-0.5" />
+        {/* Collar & Golden Bell */}
+        <div className="absolute bottom-0 w-full h-[14%] bg-gradient-to-r from-red-600 to-[#e60012] flex items-center justify-center z-30 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)]">
+          {/* Bell with 3D spherical yellow gradient */}
+          <div className="h-3.5 w-3.5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fff176_0%,#fbc02d_65%,#f57f17_100%)] border border-black/20 flex flex-col items-center justify-start pt-[1px] relative shadow-md">
+            {/* Bell eye highlight */}
+            <div className="absolute top-[1px] left-[1px] h-[1px] w-[1px] bg-white rounded-full" />
+            {/* Bell slit line */}
+            <div className="w-1.5 h-1 rounded-full bg-slate-900 flex items-center justify-center mt-[1px]">
+              <div className="w-[1px] h-1.5 bg-slate-900 mt-1" />
+            </div>
           </div>
         </div>
       </div>
