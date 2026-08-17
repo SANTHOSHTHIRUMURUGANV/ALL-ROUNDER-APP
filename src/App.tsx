@@ -11,7 +11,9 @@ import { AdminVerifyOtpView } from './views/AdminVerifyOtpView';
 function App() {
   const { role, setRole } = useApp();
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
-  const [verifyingEmail, setVerifyingEmail] = useState('');
+  const [verifyingEmail, setVerifyingEmail] = useState(() => {
+    return sessionStorage.getItem('adminVerifyingEmail') || '';
+  });
 
   const navigateTo = (path: string) => {
     window.history.pushState(null, '', path);
@@ -29,6 +31,7 @@ function App() {
   // Sync route and role states
   useEffect(() => {
     const isAdminTokenPresent = !!sessionStorage.getItem('adminToken');
+    const storedVerifyingEmail = sessionStorage.getItem('adminVerifyingEmail') || verifyingEmail;
 
     if (currentPath.startsWith('/admin')) {
       if (currentPath === '/admin/dashboard') {
@@ -38,7 +41,7 @@ function App() {
           setRole('admin');
         }
       } else if (currentPath === '/admin/verify-otp') {
-        if (!verifyingEmail) {
+        if (!storedVerifyingEmail && !verifyingEmail) {
           navigateTo('/admin/login');
         }
       }
@@ -55,6 +58,7 @@ function App() {
   }, [currentPath, role, verifyingEmail]);
 
   const handleLoginSuccess = (email: string) => {
+    sessionStorage.setItem('adminVerifyingEmail', email);
     setVerifyingEmail(email);
     navigateTo('/admin/verify-otp');
   };
@@ -62,12 +66,14 @@ function App() {
   const handleVerificationSuccess = (token: string) => {
     sessionStorage.setItem('adminToken', token);
     sessionStorage.setItem('adminEmail', verifyingEmail);
+    sessionStorage.removeItem('adminVerifyingEmail');
     setVerifyingEmail('');
     setRole('admin');
     navigateTo('/admin/dashboard');
   };
 
   const handleCancelVerification = () => {
+    sessionStorage.removeItem('adminVerifyingEmail');
     setVerifyingEmail('');
     navigateTo('/admin/login');
   };

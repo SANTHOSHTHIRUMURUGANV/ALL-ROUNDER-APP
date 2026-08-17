@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { apiRequest } from '../utils/api';
-import { Lock, Eye, EyeOff, AlertTriangle, Mail } from 'lucide-react';
+import { Lock, Eye, EyeOff, AlertTriangle, Mail, Phone } from 'lucide-react';
 
 interface AdminLoginViewProps {
   onLoginSuccess: (email: string) => void;
@@ -10,6 +10,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
   const [userNumber, setUserNumber] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [showUserNumber, setShowUserNumber] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,9 +43,14 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
         throw new Error('Invalid credentials.');
       }
 
+      const phoneNum = phone.replace(/\D/g, '');
+      if (phoneNum.length !== 10) {
+        throw new Error('Phone number must be 10 digits.');
+      }
+
       const res = await apiRequest('/auth/admin/login', {
         method: 'POST',
-        body: JSON.stringify({ userNumber: formattedNum, password, email: email.trim() })
+        body: JSON.stringify({ userNumber: formattedNum, password, email: email.trim(), phone: phoneNum })
       });
 
       if (res.success) {
@@ -123,6 +129,23 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
+            </div>
+          </div>
+
+          {/* Phone Number */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Phone Number (OTP via SMS)</label>
+            <div className="relative">
+              <input
+                type="tel"
+                placeholder="10-digit mobile number"
+                value={phone}
+                onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                maxLength={10}
+                required
+                className="w-full bg-slate-900/50 border border-white/5 rounded-2xl pl-4 pr-11 py-3 text-sm text-white placeholder-slate-650 outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/40 transition"
+              />
+              <Phone className="absolute right-4 top-3.5 h-4 w-4 text-slate-500" />
             </div>
           </div>
 

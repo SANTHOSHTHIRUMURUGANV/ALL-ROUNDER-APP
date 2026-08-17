@@ -6,6 +6,67 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+const DoraemonAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg'; isSpinning?: boolean }> = ({ size = 'md', isSpinning = true }) => {
+  const isSm = size === 'sm';
+  const isLg = size === 'lg';
+  const headSize = isSm ? 'h-8 w-8' : isLg ? 'h-14 w-14' : 'h-12 w-12';
+  const propWidth = isSm ? 'w-6' : isLg ? 'w-10' : 'w-8';
+  const shaftHeight = isSm ? 'h-1.5' : isLg ? 'h-2.5' : 'h-2';
+
+  return (
+    <div className="relative flex flex-col items-center select-none shrink-0">
+      {/* Take-copter (Bamboo Propeller) */}
+      <div className="absolute -top-3 flex flex-col items-center z-10 group-hover:scale-110 transition-transform">
+        {/* Propeller blade */}
+        <div className={`h-[3px] ${propWidth} bg-yellow-400 rounded-full border border-black/10 shadow-sm ${isSpinning ? 'animate-[spin_0.4s_linear_infinite]' : ''}`} />
+        {/* Connection shaft */}
+        <div className={`${shaftHeight} w-0.5 bg-slate-300`} />
+      </div>
+
+      {/* Doraemon Face Frame */}
+      <div className={`relative rounded-full bg-[#009fe3] border border-white/10 flex items-center justify-center overflow-hidden shadow-lg ${headSize}`}>
+        {/* White face panel */}
+        <div className="absolute bottom-0 w-[86%] h-[78%] rounded-full bg-white flex flex-col items-center pt-[5%]">
+          {/* Eyes */}
+          <div className="flex gap-[1px] justify-center z-10">
+            {/* Left eye */}
+            <div className="h-3 w-2.5 bg-white border border-slate-300 rounded-full flex items-center justify-center relative">
+              <div className="h-1.5 w-1 bg-slate-900 rounded-full absolute bottom-0.5 left-[2px]" />
+            </div>
+            {/* Right eye */}
+            <div className="h-3 w-2.5 bg-white border border-slate-300 rounded-full flex items-center justify-center relative">
+              <div className="h-1.5 w-1 bg-slate-900 rounded-full absolute bottom-0.5 right-[2px]" />
+            </div>
+          </div>
+
+          {/* Red nose */}
+          <div className="h-2 w-2 rounded-full bg-[#e60012] border border-white/20 mt-[-2px] z-10 shadow-sm" />
+
+          {/* Whiskers */}
+          <div className="absolute top-[52%] left-1.5 w-2 h-[1px] bg-slate-900/60 rotate-12" />
+          <div className="absolute top-[58%] left-1 w-2.5 h-[1px] bg-slate-900/60" />
+          <div className="absolute top-[64%] left-1.5 w-2 h-[1px] bg-slate-900/60 -rotate-12" />
+
+          <div className="absolute top-[52%] right-1.5 w-2 h-[1px] bg-slate-900/60 -rotate-12" />
+          <div className="absolute top-[58%] right-1 w-2.5 h-[1px] bg-slate-900/60" />
+          <div className="absolute top-[64%] right-1.5 w-2 h-[1px] bg-slate-900/60 rotate-12" />
+
+          {/* Smile */}
+          <div className="w-5 h-2.5 border-b border-slate-700 rounded-b-full mt-[-2px]" />
+        </div>
+
+        {/* Collar & Bell */}
+        <div className="absolute bottom-0 w-full h-[15%] bg-[#e60012] flex items-center justify-center z-20">
+          {/* Yellow Bell */}
+          <div className="h-2.5 w-2.5 rounded-full bg-[#f9c000] border border-black/10 flex items-center justify-center">
+            <div className="h-1 w-[1px] bg-slate-800 absolute bottom-0.5" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface Message {
   id: string;
   sender: 'user' | 'bot';
@@ -24,7 +85,7 @@ export const AIChatbot: React.FC = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', sender: 'bot', text: t('chatbotIntro'), timestamp: new Date() }
+    { id: '1', sender: 'bot', text: "Hello! I am Doraemon, your Take-Copter enabled AI Assistant! 🚁 How can I help you today?", timestamp: new Date() }
   ]);
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -278,7 +339,7 @@ export const AIChatbot: React.FC = () => {
     }
 
     return {
-      reply: "I am the AllRounder AI Assistant. Try asking: 'I need a painter tomorrow morning', 'My AC is not cooling', 'Find the cheapest electrician near me', or 'Find a female beautician'!"
+      reply: "I am Doraemon, your Take-Copter enabled AI Assistant! 🚁 Try asking: 'I need a painter tomorrow morning', 'My AC is not cooling', 'Find the cheapest electrician near me', or 'Find a female beautician'!"
     };
   };
 
@@ -319,15 +380,15 @@ export const AIChatbot: React.FC = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-cyan-400 to-indigo-500 p-4 text-white flex items-center justify-between">
             <div className="flex items-center space-x-2.5">
-              <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur">
-                <Bot className="h-5 w-5 text-white animate-pulse" />
+              <div className="h-9 w-9 flex items-center justify-center pt-2">
+                <DoraemonAvatar size="sm" isSpinning={true} />
               </div>
               <div>
                 <h4 className="text-xs font-black flex items-center gap-1.5 uppercase tracking-wider">
-                  AI Assistant
+                  Doraemon (AI Assistant)
                   <Sparkles className="h-3.5 w-3.5 text-yellow-300 animate-bounce shrink-0" />
                 </h4>
-                <p className="text-[9px] text-white/70 font-semibold uppercase tracking-widest">AllRounder NLP Engine</p>
+                <p className="text-[9px] text-white/70 font-semibold uppercase tracking-widest">Take-Copter Enabled</p>
               </div>
             </div>
             <button 
@@ -428,10 +489,9 @@ export const AIChatbot: React.FC = () => {
       {/* Floating button trigger */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="h-14 w-14 rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-500 text-white shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50 hover:shadow-cyan-500/30 relative border border-white/10 group cursor-pointer"
+        className="h-16 w-16 rounded-full bg-gradient-to-tr from-cyan-400/20 to-indigo-500/20 shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-50 hover:shadow-cyan-500/30 relative border border-white/10 group cursor-pointer backdrop-blur"
       >
-        <Bot className="h-7 w-7 text-white" />
-        <Sparkles className="absolute top-1 right-1 h-3.5 w-3.5 text-yellow-300 group-hover:animate-spin" />
+        <DoraemonAvatar size="lg" isSpinning={true} />
         <span className="absolute -top-1 -left-1 flex h-3 w-3">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-400"></span>
