@@ -14,209 +14,276 @@ const DoraemonAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg'; isSpinning?: boolean
   const isSm = size === 'sm';
   const isLg = size === 'lg';
 
+  // Sizing mapping
+  const width = isSm ? 38 : isLg ? 88 : 64;
+  const height = isSm ? 38 : isLg ? 110 : 80;
+
   if (mode === 'head') {
-    const headSize = isSm ? 'h-9 w-9' : isLg ? 'h-20 w-20' : 'h-14 w-14';
-    const shaftHeight = isSm ? 'h-2' : isLg ? 'h-4.5' : 'h-3.5';
-    const propellerSize = isSm ? 32 : isLg ? 76 : 52;
-
     return (
-      <div className="relative flex flex-col items-center select-none shrink-0 group">
-        <div className="absolute -top-7 flex flex-col items-center z-20">
-          <div
-            className="relative flex items-center justify-center rounded-full border border-slate-300/80 bg-[radial-gradient(circle_at_center,#fff_10%,#e5e7eb_55%,#b7c2cd_100%)] shadow-[0_8px_16px_rgba(0,0,0,0.18)]"
-            style={{
-              width: propellerSize,
-              height: propellerSize,
-              transform: 'rotateX(68deg) rotateY(12deg)',
-              transformStyle: 'preserve-3d',
-              perspective: '200px',
-            }}
-          >
-            <div
-              className={`absolute inset-0 rounded-full ${isSpinning ? 'animate-[spin_0.5s_linear_infinite]' : ''}`}
-              style={{
-                background: 'conic-gradient(from 0deg, rgba(255,255,255,0.9) 0deg, rgba(148,163,184,0.25) 55deg, rgba(255,255,255,0.8) 180deg, rgba(148,163,184,0.3) 290deg, rgba(255,255,255,0.9) 360deg)',
-              }}
-            />
-            {[0, 90, 180, 270].map((angle) => (
-              <span
-                key={angle}
-                className="absolute left-1/2 top-1/2 h-[55%] w-[18%] rounded-full bg-[linear-gradient(180deg,#ffffff_0%,#dfe7ee_100%)] shadow-[inset_0_2px_4px_rgba(148,163,184,0.5)] border border-slate-300/70"
-                style={{
-                  transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-10px)`,
-                  transformOrigin: 'center center',
-                }}
-              />
-            ))}
-            <div className="absolute h-3 w-3 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fef9c3_0%,#facc15_45%,#b45309_100%)] border border-yellow-355 shadow-[0_2px_6px_rgba(0,0,0,0.2)]" />
-          </div>
+      <div className="relative flex items-center justify-center select-none shrink-0 group">
+        <svg 
+          width={width} 
+          height={width} 
+          viewBox="15 35 170 110" 
+          fill="none" 
+          xmlns="http://www.w3.org/2000/svg"
+          className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]"
+        >
+          <defs>
+            <radialGradient id="headGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="60%" stopColor="#0284c7" />
+              <stop offset="100%" stopColor="#0369a1" />
+            </radialGradient>
+            <radialGradient id="faceGrad" cx="45%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="85%" stopColor="#f8fafc" />
+              <stop offset="100%" stopColor="#e2e8f0" />
+            </radialGradient>
+            <radialGradient id="redNoseGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="65%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+            <radialGradient id="bellGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="65%" stopColor="#eab308" />
+              <stop offset="100%" stopColor="#a16207" />
+            </radialGradient>
+            <linearGradient id="propellerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.7" />
+            </linearGradient>
+          </defs>
 
-          <div className={`w-[2.5px] bg-gradient-to-b from-yellow-300 via-yellow-500 to-yellow-600 shadow-sm ${shaftHeight}`} />
-          <div className="h-1 w-2.5 rounded-full bg-yellow-600 mt-[-1px] border border-black/10 shadow-sm" />
-        </div>
+          {/* 3D Take-copter */}
+          <g>
+            {/* Shaft base suction cup */}
+            <path d="M 94,48 Q 100,51 106,48 Z" fill="#d97706" stroke="#0f172a" strokeWidth="1" />
+            {/* Shaft */}
+            <rect x="98.5" y="32" width="3" height="16" rx="1.5" fill="url(#bellGrad)" stroke="#0f172a" strokeWidth="1" />
+            {/* Tilted Spinning Blade */}
+            <g style={{ transform: 'rotateX(72deg)', transformOrigin: '100px 30px' }}>
+              <g className={isSpinning ? "animate-[spin_0.2s_linear_infinite]" : ""} style={{ transformOrigin: '100px 30px' }}>
+                <ellipse cx="100" cy="30" rx="46" ry="7.5" fill="url(#propellerGrad)" stroke="#475569" strokeWidth="0.75" />
+                <circle cx="100" cy="30" r="4.5" fill="#facc15" stroke="#0f172a" strokeWidth="0.75" />
+              </g>
+            </g>
+          </g>
 
-        <div className={`relative rounded-[44%] bg-[radial-gradient(circle_at_35%_35%,#00b8ff_0%,#1ba4de_52%,#005d8e_100%)] border border-black/20 flex items-center justify-center overflow-hidden shadow-[0_14px_22px_rgba(0,0,0,0.24),inset_0_-10px_12px_rgba(0,0,0,0.18)] ${headSize}`}>
-          <div className="absolute bottom-[2%] w-[88%] h-[82%] rounded-[45%] bg-[radial-gradient(circle_at_40%_30%,#ffffff_60%,#eef3f8_90%,#dfe6ef_100%)] border border-black/5 flex flex-col items-center pt-[6%] shadow-[inset_0_-3px_5px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.15)]">
-            <div className="flex gap-[0.5px] justify-center z-15">
-              <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative shadow-[0_0.5px_1px_rgba(0,0,0,0.1)]">
-                <div className="h-2 w-1.5 bg-slate-900 rounded-full absolute bottom-1 left-[3px] flex items-center justify-center">
-                  <div className="h-0.5 w-0.5 bg-white rounded-full absolute top-[1px]" />
-                </div>
-              </div>
-              <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative shadow-[0_0.5px_1px_rgba(0,0,0,0.1)]">
-                <svg className="w-full h-full absolute inset-0 text-slate-800" viewBox="0 0 14 18" fill="none">
-                  <path d="M2.5 9.5C3.5 7.5 7.5 7.5 8.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </div>
-            </div>
+          {/* Head Dome */}
+          <circle cx="100" cy="92" r="48" fill="url(#headGrad)" stroke="#0f172a" strokeWidth="1.5" />
 
-            <div className="h-3 w-3 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ff4d4d_0%,#e60012_70%,#80000a_100%)] mt-[-2px] z-20 shadow-md relative flex items-center justify-center">
-              <div className="absolute top-[1.5px] left-[1.5px] h-[2.5px] w-[2.5px] rounded-full bg-white/90" />
-            </div>
+          {/* Face Panel */}
+          <path 
+            d="M 60,94 C 60,65 140,65 140,94 C 140,119 60,119 60,94 Z" 
+            fill="url(#faceGrad)" 
+            stroke="#0f172a" 
+            strokeWidth="1.25" 
+          />
 
-            {!isSm && (
-              <>
-                <div className="absolute top-[52%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
-                <div className="absolute top-[58%] left-1 w-4 h-[1px] bg-slate-900/60 rounded" />
-                <div className="absolute top-[64%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
+          {/* Left Eye */}
+          <ellipse cx="88" cy="74" rx="11" ry="15" fill="white" stroke="#0f172a" strokeWidth="1.5" />
+          <ellipse cx="92.5" cy="78" rx="4.5" ry="7.5" fill="#0f172a" />
+          <circle cx="91.5" cy="75" r="1.5" fill="white" />
 
-                <div className="absolute top-[52%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
-                <div className="absolute top-[58%] right-1 w-4 h-[1px] bg-slate-900/60 rounded" />
-                <div className="absolute top-[64%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
-              </>
-            )}
+          {/* Right Eye: Winking */}
+          <ellipse cx="112" cy="74" rx="11" ry="15" fill="white" stroke="#0f172a" strokeWidth="1.5" />
+          <path d="M 104,74 Q 112,68 120,74" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" fill="none" />
 
-            {!isSm ? (
-              <div className="w-[28px] h-[16px] bg-[#990000] border border-black/10 rounded-b-full mt-[1px] relative overflow-hidden flex flex-col items-center shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.5)] z-10">
-                <div className="absolute bottom-[-1px] w-[22px] h-[9px] bg-[radial-gradient(circle_at_50%_0%,#ff8080_0%,#e60012_90%)] rounded-full border-t border-red-300 shadow-sm" />
-              </div>
-            ) : (
-              <div className="w-4 h-2 border-b-2 border-slate-700 rounded-b-full mt-[1px] z-10" />
-            )}
-          </div>
+          {/* Nose */}
+          <circle cx="100" cy="90" r="8" fill="url(#redNoseGrad)" stroke="#0f172a" strokeWidth="1.5" />
+          <circle cx="97.5" cy="87.5" r="2.2" fill="white" />
 
-          <div className="absolute bottom-0 w-full h-[14%] bg-gradient-to-r from-red-600 to-[#e60012] flex items-center justify-center z-30 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)]">
-            <div className="h-3.5 w-3.5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fff176_0%,#fbc02d_65%,#f57f17_100%)] border border-black/20 flex flex-col items-center justify-start pt-[1px] relative shadow-md">
-              <div className="absolute top-[1px] left-[1px] h-[1px] w-[1px] bg-white rounded-full" />
-              <div className="w-1.5 h-1 rounded-full bg-slate-900 flex items-center justify-center mt-[1px]">
-                <div className="w-[1px] h-1.5 bg-slate-900 mt-1" />
-              </div>
-            </div>
-          </div>
-        </div>
+          {/* Whiskers */}
+          {!isSm && (
+            <>
+              {/* Left whiskers */}
+              <line x1="82" y1="96" x2="60" y2="92" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="82" y1="102" x2="57" y2="102" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="82" y1="108" x2="60" y2="112" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+              {/* Right whiskers */}
+              <line x1="118" y1="96" x2="140" y2="92" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="118" y1="102" x2="143" y2="102" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="118" y1="108" x2="140" y2="112" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+            </>
+          )}
+
+          {/* Nose-to-Mouth divider */}
+          <line x1="100" y1="98" x2="100" y2="108" stroke="#0f172a" strokeWidth="1.5" />
+
+          {/* Mouth (Happy Smile) */}
+          <path d="M 72,108 C 72,136 128,136 128,108 Z" fill="#b91c1c" stroke="#0f172a" strokeWidth="1.5" />
+          {/* Tongue */}
+          <path d="M 83,122 C 90,111 110,111 117,122 C 112,132 88,132 83,122 Z" fill="#f87171" />
+
+          {/* Red Collar */}
+          <path d="M 68,135 Q 100,140 132,135 C 132,135 128,140 100,140 Q 72,140 68,135" fill="#dc2626" stroke="#0f172a" strokeWidth="1.5" />
+
+          {/* Bell */}
+          <circle cx="100" cy="144" r="8.5" fill="url(#bellGrad)" stroke="#0f172a" strokeWidth="1.5" />
+          <line x1="92" y1="141" x2="108" y2="141" stroke="#0f172a" strokeWidth="1.25" />
+          <circle cx="100" cy="146.5" r="2.2" fill="#0f172a" />
+          <line x1="100" y1="148.7" x2="100" y2="152.5" stroke="#0f172a" strokeWidth="1.25" />
+        </svg>
       </div>
     );
   }
 
   // Renders the FULL-BODY flying winking Doraemon
   return (
-    <div className="relative flex flex-col items-center select-none shrink-0 group w-20 h-28 hover:scale-105 transition-transform">
-      {/* 3D Take-Copter */}
-      <div className="absolute top-0 flex flex-col items-center z-30">
-        <div
-          className="relative flex items-center justify-center rounded-full border border-slate-350 bg-[radial-gradient(ellipse_at_center,#ffffff_30%,#e2e8f0_90%)] shadow-[0_1px_3px_rgba(0,0,0,0.15)]"
-          style={{
-            width: 48,
-            height: 48,
-            transform: 'rotateX(68deg) rotateY(12deg)',
-            transformStyle: 'preserve-3d',
-            perspective: '200px',
-          }}
-        >
-          <div
-            className={`absolute inset-0 rounded-full ${isSpinning ? 'animate-[spin_0.5s_linear_infinite]' : ''}`}
-            style={{
-              background: 'conic-gradient(from 0deg, rgba(255,255,255,0.9) 0deg, rgba(148,163,184,0.25) 55deg, rgba(255,255,255,0.8) 180deg, rgba(148,163,184,0.3) 290deg, rgba(255,255,255,0.9) 360deg)',
-            }}
-          />
-          {[0, 90, 180, 270].map((angle) => (
-            <span
-              key={angle}
-              className="absolute left-1/2 top-1/2 h-[55%] w-[18%] rounded-full bg-[linear-gradient(180deg,#ffffff_0%,#dfe7ee_100%)] shadow-[inset_0_2px_4px_rgba(148,163,184,0.5)] border border-slate-300/70"
-              style={{
-                transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-10px)`,
-                transformOrigin: 'center center',
-              }}
-            />
-          ))}
-          <div className="absolute h-3 w-3 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fef9c3_0%,#facc15_45%,#b45309_100%)] border border-yellow-300" />
-        </div>
+    <div className="relative flex items-center justify-center select-none shrink-0 group hover:scale-105 transition-transform">
+      <svg 
+        width={width} 
+        height={height} 
+        viewBox="10 10 180 220" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg"
+        className="filter drop-shadow-[0_8px_20px_rgba(0,160,233,0.4)]"
+      >
+        <defs>
+          <radialGradient id="headGrad" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#38bdf8" />
+            <stop offset="60%" stopColor="#0284c7" />
+            <stop offset="100%" stopColor="#0369a1" />
+          </radialGradient>
+          <radialGradient id="faceGrad" cx="45%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="85%" stopColor="#f8fafc" />
+            <stop offset="100%" stopColor="#e2e8f0" />
+          </radialGradient>
+          <radialGradient id="redNoseGrad" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#f87171" />
+            <stop offset="65%" stopColor="#dc2626" />
+            <stop offset="100%" stopColor="#991b1b" />
+          </radialGradient>
+          <radialGradient id="bellGrad" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#fef08a" />
+            <stop offset="65%" stopColor="#eab308" />
+            <stop offset="100%" stopColor="#a16207" />
+          </radialGradient>
+          <linearGradient id="propellerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.75" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.75" />
+          </linearGradient>
+        </defs>
 
-        <div className="w-[2.5px] h-4.5 bg-gradient-to-b from-yellow-300 via-yellow-500 to-yellow-600 shadow-sm" />
-        <div className="h-1 w-2.5 rounded-full bg-yellow-600 mt-[-1px] border border-black/10 shadow-sm" />
-      </div>
+        {/* 3D Take-copter (Propeller) */}
+        <g>
+          {/* Suction base */}
+          <path d="M 94,26 Q 100,29 106,26 Z" fill="#d97706" stroke="#0f172a" strokeWidth="1" />
+          {/* Shaft */}
+          <rect x="98.5" y="14" width="3" height="12" rx="1" fill="url(#bellGrad)" stroke="#0f172a" strokeWidth="1" />
+          {/* Blade */}
+          <g style={{ transform: 'rotateX(72deg)', transformOrigin: '100px 12px' }}>
+            <g className={isSpinning ? "animate-[spin_0.2s_linear_infinite]" : ""} style={{ transformOrigin: '100px 12px' }}>
+              <ellipse cx="100" cy="12" rx="48" ry="8" fill="url(#propellerGrad)" stroke="#475569" strokeWidth="0.75" />
+              <circle cx="100" cy="12" r="4.5" fill="#facc15" stroke="#0f172a" strokeWidth="0.75" />
+            </g>
+          </g>
+        </g>
 
-      {/* Head */}
-      <div className="absolute top-4 w-16 h-16 rounded-[44%] bg-[radial-gradient(circle_at_35%_35%,#00b8ff_0%,#1ba4de_52%,#005d8e_100%)] border border-black/20 flex items-center justify-center overflow-hidden shadow-[0_4px_8px_rgba(0,0,0,0.2),inset_0_-4px_6px_rgba(0,0,0,0.18)] z-20">
-        <div className="absolute bottom-[2%] w-[88%] h-[82%] rounded-[45%] bg-[radial-gradient(circle_at_40%_30%,#ffffff_60%,#eef3f8_90%,#dfe6ef_100%)] border border-black/5 flex flex-col items-center pt-[6%] shadow-[inset_0_-2px_4px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.15)]">
-          <div className="flex gap-[0.5px] justify-center z-15">
-            <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative">
-              <div className="h-2 w-1.5 bg-slate-900 rounded-full absolute bottom-1 left-[3px] flex items-center justify-center">
-                <div className="h-0.5 w-0.5 bg-white rounded-full absolute top-[1px]" />
-              </div>
-            </div>
-            <div className="h-4.5 w-3.5 bg-white border border-slate-400 rounded-full flex items-center justify-center relative shadow-[0_0.5px_1px_rgba(0,0,0,0.1)]">
-              <svg className="w-full h-full absolute inset-0 text-slate-800" viewBox="0 0 14 18" fill="none">
-                <path d="M2.5 9.5C3.5 7.5 7.5 7.5 8.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
-          </div>
+        {/* Red Tail */}
+        <circle cx="140" cy="170" r="9" fill="#dc2626" stroke="#0f172a" strokeWidth="1.5" />
 
-          <div className="h-3 w-3 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ff4d4d_0%,#e60012_70%,#80000a_100%)] mt-[-2px] z-20 shadow-md relative flex items-center justify-center">
-            <div className="absolute top-[1.5px] left-[1.5px] h-[2.5px] w-[2.5px] rounded-full bg-white/90" />
-          </div>
-          <div className="absolute top-[52%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
-          <div className="absolute top-[58%] left-1 w-4 h-[1px] bg-slate-900/60 rounded" />
-          <div className="absolute top-[64%] left-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
+        {/* Torso Body */}
+        <path 
+          d="M 74,124 L 70,182 Q 70,192 100,192 Q 130,192 130,182 L 126,124 Z" 
+          fill="url(#headGrad)" 
+          stroke="#0f172a" 
+          strokeWidth="1.5" 
+        />
 
-          <div className="absolute top-[52%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 -rotate-12 rounded" />
-          <div className="absolute top-[58%] right-1 w-4 h-[1px] bg-slate-900/60 rounded" />
-          <div className="absolute top-[64%] right-1.5 w-3.5 h-[1px] bg-slate-900/60 rotate-12 rounded" />
+        {/* White Belly Pouch */}
+        <path 
+          d="M 78,124 C 78,124 100,132 122,124 C 124,158 76,158 78,124 Z" 
+          fill="url(#faceGrad)" 
+          stroke="#0f172a" 
+          strokeWidth="1.5" 
+        />
+        {/* Half-Moon Pocket */}
+          <path d="M 83,142 C 83,142 100,160 117,142 Z" fill="none" stroke="#0f172a" strokeWidth="1.5" />
 
-          {!isSm ? (
-            <div className="w-[28px] h-[16px] bg-[#990000] border border-black/10 rounded-b-full mt-[1px] relative overflow-hidden flex flex-col items-center shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.5)] z-10">
-              <div className="absolute bottom-[-1px] w-[22px] h-[9px] bg-[radial-gradient(circle_at_50%_0%,#ff8080_0%,#e60012_90%)] rounded-full border-t border-red-300 shadow-sm" />
-            </div>
-          ) : (
-            <div className="w-4 h-2 border-b-2 border-slate-700 rounded-b-full mt-[1px] z-10" />
-          )}
-        </div>
+        {/* Legs Divider Gap */}
+        <path d="M 96,192 L 100,184 L 104,192 Z" fill="#0b1329" stroke="#0b1329" strokeWidth="1" />
 
-        <div className="absolute bottom-0 w-full h-[14%] bg-gradient-to-r from-red-600 to-[#e60012] flex items-center justify-center z-30 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)]">
-          <div className="h-3.5 w-3.5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fff176_0%,#fbc02d_65%,#f57f17_100%)] border border-black/20 flex flex-col items-center justify-start pt-[1px] relative shadow-md">
-            <div className="absolute top-[1px] left-[1px] h-[1px] w-[1px] bg-white rounded-full" />
-            <div className="w-1.5 h-1 rounded-full bg-slate-900 flex items-center justify-center mt-[1px]">
-              <div className="w-[1px] h-1.5 bg-slate-900 mt-1" />
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* White Feet */}
+        <ellipse cx="80" cy="197" rx="18" ry="11" fill="white" stroke="#0f172a" strokeWidth="1.5" />
+        <ellipse cx="120" cy="197" rx="18" ry="11" fill="white" stroke="#0f172a" strokeWidth="1.5" />
 
-      {/* Waving Left Arm */}
-      <div className="absolute left-[-4px] top-[74px] w-4.5 h-7 rounded-full bg-[#009fe3] border border-black/15 shadow-sm -rotate-45 origin-bottom z-15 flex items-start justify-center">
-        <div className="w-4.5 h-4.5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff_60%,#e2e8f0_100%)] border border-slate-300 shadow-md absolute -top-2.5" />
-      </div>
+        {/* Waving Left Arm (Up) */}
+        <path 
+          d="M 74,136 L 50,116 Q 44,111 38,120 Q 32,128 42,136 L 68,154 Z" 
+          fill="url(#headGrad)" 
+          stroke="#0f172a" 
+          strokeWidth="1.5" 
+        />
+        {/* Left Hand */}
+        <circle cx="42" cy="120" r="9.5" fill="white" stroke="#0f172a" strokeWidth="1.5" />
 
-      {/* Torso Body */}
-      <div className="absolute top-[72px] w-12 h-12 rounded-full bg-[radial-gradient(circle_at_35%_35%,#00b8ff_0%,#009fe3_60%,#005d8e_100%)] border border-black/20 flex items-center justify-center z-10 shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
-        <div className="absolute bottom-[3px] w-[75%] h-[68%] rounded-full bg-white flex flex-col items-center justify-center border border-black/5 shadow-inner">
-          <div className="w-[24px] h-[12px] border-b border-l border-r border-slate-400 rounded-b-full mt-2" />
-        </div>
-      </div>
+        {/* Right Arm (Down) */}
+        <path 
+          d="M 126,138 L 148,152 Q 155,156 160,148 Q 165,140 154,136 L 132,128 Z" 
+          fill="url(#headGrad)" 
+          stroke="#0f172a" 
+          strokeWidth="1.5" 
+        />
+        {/* Right Hand */}
+        <circle cx="155" cy="148" r="9.5" fill="white" stroke="#0f172a" strokeWidth="1.5" />
 
-      {/* Right Arm */}
-      <div className="absolute right-[-4px] top-[78px] w-4.5 h-7 rounded-full bg-[#009fe3] border border-black/15 shadow-sm rotate-[35deg] origin-top z-15 flex items-end justify-center">
-        <div className="w-4.5 h-4.5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff_60%,#e2e8f0_100%)] border border-slate-300 shadow-md absolute -bottom-2.5" />
-      </div>
+        {/* Head Dome */}
+        <circle cx="100" cy="80" r="50" fill="url(#headGrad)" stroke="#0f172a" strokeWidth="1.5" />
 
-      {/* Tail */}
-      <div className="absolute bottom-8 right-2 w-4 h-4 rounded-full bg-[#e60012] border border-black/10 shadow-sm z-5 animate-pulse" />
+        {/* Face Panel */}
+        <path 
+          d="M 58,82 C 58,52 142,52 142,82 C 142,108 58,108 58,82 Z" 
+          fill="url(#faceGrad)" 
+          stroke="#0f172a" 
+          strokeWidth="1.25" 
+        />
 
-      {/* Feet */}
-      <div className="absolute bottom-2.5 flex gap-[1px] justify-center w-full z-15">
-        <div className="w-6 h-5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff_60%,#e2e8f0_100%)] border border-slate-300 shadow-md" />
-        <div className="w-6 h-5 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff_60%,#e2e8f0_100%)] border border-slate-300 shadow-md" />
-      </div>
+        {/* Left Eye */}
+        <ellipse cx="88" cy="62" rx="11" ry="15" fill="white" stroke="#0f172a" strokeWidth="1.5" />
+        <ellipse cx="92.5" cy="66" rx="4.5" ry="7.5" fill="#0f172a" />
+        <circle cx="91.5" cy="63" r="1.5" fill="white" />
+
+        {/* Right Eye: Winking */}
+        <ellipse cx="112" cy="62" rx="11" ry="15" fill="white" stroke="#0f172a" strokeWidth="1.5" />
+        <path d="M 104,62 Q 112,56 120,62" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+
+        {/* Nose */}
+        <circle cx="100" cy="78" r="8.5" fill="url(#redNoseGrad)" stroke="#0f172a" strokeWidth="1.5" />
+        <circle cx="97.5" cy="75.5" r="2.5" fill="white" />
+
+        {/* Whiskers */}
+        {/* Left Whiskers */}
+        <line x1="80" y1="84" x2="56" y2="78" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="80" y1="90" x2="53" y2="90" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="80" y1="96" x2="56" y2="102" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+        {/* Right Whiskers */}
+        <line x1="120" y1="84" x2="144" y2="78" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="120" y1="90" x2="147" y2="90" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="120" y1="96" x2="144" y2="102" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+
+        {/* Nose-to-Mouth divider */}
+        <line x1="100" y1="86.5" x2="100" y2="96.5" stroke="#0f172a" strokeWidth="1.5" />
+
+        {/* Mouth (Happy Smile) */}
+        <path d="M 70,96 C 70,125 130,125 130,96 Z" fill="#b91c1c" stroke="#0f172a" strokeWidth="1.5" />
+        {/* Tongue */}
+        <path d="M 81,111 C 88,100 112,100 119,111 C 114,121 86,121 81,111 Z" fill="#f87171" />
+
+        {/* Red Collar */}
+        <path d="M 66,124 Q 100,130 134,124 C 134,124 130,129 100,129 Q 70,129 66,124" fill="#dc2626" stroke="#0f172a" strokeWidth="1.5" />
+
+        {/* Bell */}
+        <circle cx="100" cy="133" r="9" fill="url(#bellGrad)" stroke="#0f172a" strokeWidth="1.5" />
+        <line x1="91" y1="130" x2="109" y2="130" stroke="#0f172a" strokeWidth="1.25" />
+        <circle cx="100" cy="135.5" r="2.2" fill="#0f172a" />
+        <line x1="100" y1="137.7" x2="100" y2="141.5" stroke="#0f172a" strokeWidth="1.25" />
+      </svg>
     </div>
   );
 };
