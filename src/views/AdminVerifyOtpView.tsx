@@ -120,6 +120,9 @@ export const AdminVerifyOtpView: React.FC<AdminVerifyOtpProps> = ({ email, onVer
             <span className="truncate max-w-[250px]">{email}</span>
           </div>
           <p className="text-[10px] text-slate-500 mt-2">A 6-digit verification code has been dispatched to your email.</p>
+          <p className="text-[10px] text-amber-400 mt-2 bg-amber-500/10 border border-amber-500/20 py-1.5 px-3 rounded-xl inline-block font-medium">
+            💡 Local Testing Bypass: Check <code className="bg-slate-900 px-1 py-0.5 rounded text-white font-mono">backend/otp-debug.log</code> or console logs for the OTP.
+          </p>
         </div>
 
         {/* Errors */}

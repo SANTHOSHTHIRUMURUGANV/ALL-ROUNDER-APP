@@ -6,6 +6,10 @@ import jwt from 'jsonwebtoken';
 
 const ADMIN_OTP_STORE = {};
 
+const isEmailConfigured = () => Boolean(
+  process.env.OTP_EMAIL_USER && process.env.OTP_EMAIL_PASSWORD
+);
+
 // Initialize Twilio client
 const getTwilioClient = () => {
   if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
@@ -101,9 +105,11 @@ export const loginAdmin = async (req, res, next) => {
     if (reqUserNumber !== envUserNumber || password !== envPassword || !isApprovedEmail(email) || !isApprovedPhone(phone)) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
-
     // Generate secure 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Print OTP in console logs for easy developer access
+    console.log('🔑 [DEVELOPER ONLY] Admin OTP verification code is:', otp);
 
     // Store in-memory with phone number
     ADMIN_OTP_STORE[email.toLowerCase()] = {
